@@ -1,0 +1,221 @@
+# Kineo - Professional .gitignore
+# Python + FastAPI + GCP + Atlassian Production Standards
+
+# ════════════════════════════════════════════════════
+# SECRETS & ENVIRONMENT VARIABLES
+# ════════════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+service-account*.json
+credentials.json
+secrets.yaml
+secrets.yml
+
+# ════════════════════════════════════════════════════
+# PYTHON
+# ════════════════════════════════════════════════════
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# ════════════════════════════════════════════════════
+# IDEs & EDITORS
+# ════════════════════════════════════════════════════
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ════════════════════════════════════════════════════
+# GOOGLE CLOUD PLATFORM
+# ════════════════════════════════════════════════════
+# Service account keys
+*-service-account.json
+*-sa-key.json
+
+# GCP deployment artifacts
+.gcloudignore
+gcp-credentials.json
+
+# ════════════════════════════════════════════════════
+# DOCKER
+# ════════════════════════════════════════════════════
+*.log
+docker-compose.override.yml
+
+# ════════════════════════════════════════════════════
+# FIRESTORE
+# ════════════════════════════════════════════════════
+# Local Firestore emulator data
+firestore-data/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+
+# ════════════════════════════════════════════════════
+# LOGS & DATABASES
+# ════════════════════════════════════════════════════
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# ════════════════════════════════════════════════════
+# OPERATING SYSTEM FILES
+# ════════════════════════════════════════════════════
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ════════════════════════════════════════════════════
+# TEMPORARY & BACKUP FILES
+# ════════════════════════════════════════════════════
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+
+# ════════════════════════════════════════════════════
+# NODE (if needed for frontend tooling)
+# ════════════════════════════════════════════════════
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ════════════════════════════════════════════════════
+# ATLASSIAN STANDARDS
+# ════════════════════════════════════════════════════
+# Security scans
+.snyk
+snyk-report.json
+
+# CI/CD artifacts
+.artifacts/
+.build/
+
+# Performance testing
+*.jmx.bak
+*.jtl
+
+# Documentation builds (if using Confluence exports)
+confluence-export/
+
+# ════════════════════════════════════════════════════
+# PROJECT-SPECIFIC
+# ════════════════════════════════════════════════════
+# Local test data
+test_data/
+local_testing/
+
+# Audio/video test files
+*.wav
+*.mp3
+*.mp4
+*.webm
+
+# Generated reports
+reports/
+*.csv
+*.xlsx
+
+# Deployment artifacts
+deployment-logs/
