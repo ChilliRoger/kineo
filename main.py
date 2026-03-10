@@ -24,7 +24,7 @@ from agent import (
 )
 from tools.firestore_client import get_customer, list_all_customers
 from tools.churn_scorer import score_churn
-from gemini_live_session import GeminiLiveSession
+from gemini_audio_session import GeminiAudioSession
 
 # Load environment variables
 load_dotenv()
@@ -141,8 +141,8 @@ class SessionManager:
             # Get customer profile first
             customer = get_customer(customer_id)
             
-            # Create Gemini Live session
-            gemini_session = GeminiLiveSession(customer_id, session_id)
+            # Create Gemini Audio session (Live API not available, using standard API)
+            gemini_session = GeminiAudioSession(customer_id, session_id)
             
             # Set up callbacks to send Gemini responses to frontend
             async def on_audio_response(audio_data: str):

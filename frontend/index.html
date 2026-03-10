@@ -503,38 +503,70 @@
             }
         }
 
-        async function playAudioResponse(base64Audio) {
+        async function playAudioResponse(data) {
             try {
-                // Decode base64 to ArrayBuffer
-                const binaryString = atob(base64Audio);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
+                // Check if this is text-to-speech format
+                if (data.startsWith('TEXT_TO_SPEAK:')) {
+                    const text = data.substring('TEXT_TO_SPEAK:'.length);
+                    speakText(text);
+                    return;
                 }
 
-                // Create audio context if not exists
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                        sampleRate: 16000
-                    });
+                // Otherwise treat as audio data
+                try {
+                    // Decode base64 to ArrayBuffer
+                    const binaryString = atob(data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+
+                    // Create audio context if not exists
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                            sampleRate: 16000
+                        });
+                    }
+
+                    // Decode audio data
+                    const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+
+                    // Create audio source and play
+                    const source = audioContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    
+                    // Update status when playback completes
+                    source.onended = () => {
+                        updateStatus('listening', 'Listening...');
+                    };
+                    
+                    source.start(0);
+                } catch (audioError) {
+                    console.log('Not audio data, skipping');
                 }
+            } catch (error) {
+                console.error('Error playing audio response:', error);
+                updateStatus('listening', 'Listening...');
+            }
+        }
 
-                // Decode audio data
-                const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
-
-                // Create audio source and play
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContext.destination);
+        function speakText(text) {
+            // Use Web Speech API to speak text
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
                 
-                // Update status when playback completes
-                source.onended = () => {
+                utterance.onend = () => {
                     updateStatus('listening', 'Listening...');
                 };
                 
-                source.start(0);
-            } catch (error) {
-                console.error('Error playing audio response:', error);
+                window.speechSynthesis.speak(utterance);
+                console.log('🔊 Speaking:', text);
+            } else {
+                console.warn('Speech synthesis not supported');
                 updateStatus('listening', 'Listening...');
             }
         }
