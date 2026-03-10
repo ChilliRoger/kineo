@@ -30,7 +30,7 @@ class GeminiAudioSession:
         self.customer_id = customer_id
         self.session_id = session_id
         self.client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-        self.model_id = 'gemini-2.5-flash'  # Use standard model
+        self.model_id = 'gemini-2.0-flash'  # Try 2.0 flash - might have separate quota
         
         # Session state
         self.is_active = False

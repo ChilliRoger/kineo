@@ -18,7 +18,7 @@ async def test_generate():
     print("="*70)
     
     client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-    model_id = 'gemini-2.5-flash'
+    model_id = 'gemini-2.0-flash'  # Try 2.0 flash
     
     try:
         print(f"\n1. Using model: {model_id}")
