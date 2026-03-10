@@ -1,3 +1,654 @@
-<!-- frontend/index.html -->
-<!-- Complete single-file frontend for Kineo -->
-<!-- Handles WebSocket connection, mic/camera capture, and real-time conversation display -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kineo - Voice Return Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .status-connecting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-listening {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-speaking {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-idle {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .churn-indicator {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+            display: none;
+        }
+
+        .churn-low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .churn-medium {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .churn-high {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .churn-critical {
+            background: #ef4444;
+            color: white;
+        }
+
+        .transcript-area {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .message-user {
+            background: #dbeafe;
+            margin-left: 20%;
+        }
+
+        .message-agent {
+            background: #f3e8ff;
+            margin-right: 20%;
+        }
+
+        .message-system {
+            background: #f3f4f6;
+            color: #6b7280;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .message-timestamp {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .video-container {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        video {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            background: black;
+        }
+
+        .customer-info {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .customer-info h3 {
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .customer-info p {
+            margin: 4px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loyalty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-gold {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-silver {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .badge-bronze {
+            background: #fed7aa;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo">
+            <h1>Kineo</h1>
+            <p>Voice Return Agent · E-Commerce Churn Prevention</p>
+        </div>
+
+        <!-- Customer ID Input -->
+        <div id="setupSection">
+            <div class="input-group">
+                <label for="customerId">Customer ID</label>
+                <input 
+                    type="text" 
+                    id="customerId" 
+                    placeholder="Enter customer ID (e.g., customer_001)"
+                    value="customer_001"
+                />
+            </div>
+            <button class="btn-primary" onclick="startSession()">Start Session</button>
+        </div>
+
+        <!-- Customer Info -->
+        <div id="customerInfo" class="customer-info">
+            <h3>Customer Profile</h3>
+            <div id="customerDetails"></div>
+        </div>
+
+        <!-- Session Section -->
+        <div id="sessionSection" class="hidden">
+            <!-- Status Indicator -->
+            <div id="status" class="status-indicator status-idle">
+                <div class="status-dot" style="background-color: currentColor;"></div>
+                <span id="statusText">Idle</span>
+            </div>
+
+            <!-- Churn Risk Indicator -->
+            <div id="churnIndicator" class="churn-indicator">
+                <span id="churnText">Churn Risk: Unknown</span>
+            </div>
+
+            <!-- Video Feed (hidden by default) -->
+            <div id="videoContainer" class="video-container">
+                <video id="videoFeed" autoplay muted></video>
+            </div>
+
+            <!-- Transcript Area -->
+            <div id="transcript" class="transcript-area">
+                <div class="message message-system">
+                    <div>Session starting... Speak naturally!</div>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="button-group">
+                <button class="btn-primary" onclick="requestOffer()" id="offerBtn">Request Win-Back Offer</button>
+                <button class="btn-danger" onclick="endSession()" id="endBtn">End Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // GLOBAL STATE
+        // ═══════════════════════════════════════════════════════════
+        let ws = null;
+        let sessionId = null;
+        let currentCustomerId = null;
+        let mediaRecorder = null;
+        let audioStream = null;
+        let videoStream = null;
+
+        const API_BASE = window.location.origin;
+        const WS_BASE = API_BASE.replace('http', 'ws');
+
+        // ═══════════════════════════════════════════════════════════
+        // SESSION MANAGEMENT
+        // ═══════════════════════════════════════════════════════════
+
+        async function startSession() {
+            const customerIdInput = document.getElementById('customerId');
+            const customerId = customerIdInput.value.trim();
+
+            if (!customerId) {
+                alert('Please enter a customer ID');
+                return;
+            }
+
+            try {
+                // Fetch customer profile
+                updateStatus('connecting', 'Loading customer profile...');
+                
+                const response = await fetch(`${API_BASE}/customer/${customerId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error('Customer not found');
+                }
+
+                currentCustomerId = customerId;
+                displayCustomerInfo(data.customer);
+
+                // Initialize WebSocket
+                updateStatus('connecting', 'Connecting to agent...');
+                ws = new WebSocket(`${WS_BASE}/session`);
+
+                ws.onopen = () => {
+                    // Send customer ID to establish session
+                    ws.send(JSON.stringify({
+                        type: 'init',
+                        customer_id: customerId
+                    }));
+                };
+
+                ws.onmessage = handleWebSocketMessage;
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateStatus('idle', 'Connection error');
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket closed');
+                    updateStatus('idle', 'Session ended');
+                };
+
+                // Show session section
+                document.getElementById('setupSection').classList.add('hidden');
+                document.getElementById('sessionSection').classList.remove('hidden');
+
+                // Request microphone access
+                await initializeAudio();
+
+            } catch (error) {
+                alert(`Error starting session: ${error.message}`);
+                updateStatus('idle', 'Error');
+            }
+        }
+
+        async function endSession() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'end_session' }));
+                ws.close();
+            }
+
+            // Stop media streams
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+            }
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Reset UI
+            document.getElementById('setupSection').classList.remove('hidden');
+            document.getElementById('sessionSection').classList.add('hidden');
+            document.getElementById('customerInfo').style.display = 'none';
+            document.getElementById('churnIndicator').style.display = 'none';
+            document.getElementById('transcript').innerHTML = '<div class="message message-system"><div>Session ended</div></div>';
+
+            updateStatus('idle', 'Idle');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // WEBSOCKET MESSAGE HANDLING
+        // ═══════════════════════════════════════════════════════════
+
+        function handleWebSocketMessage(event) {
+            const message = JSON.parse(event.data);
+
+            switch (message.type) {
+                case 'session_started':
+                    sessionId = message.session_id;
+                    updateStatus('listening', 'Listening... Speak now!');
+                    addTranscriptMessage('system', `Session started: ${sessionId}`);
+                    break;
+
+                case 'transcript':
+                    addTranscriptMessage(message.role, message.text);
+                    break;
+
+                case 'offer':
+                    updateStatus('speaking', 'Agent is responding...');
+                    addTranscriptMessage('agent', message.text);
+                    
+                    // Parse churn level from offer message
+                    detectChurnLevel(message.text);
+                    
+                    setTimeout(() => {
+                        updateStatus('listening', 'Listening...');
+                    }, 3000);
+                    break;
+
+                case 'error':
+                    addTranscriptMessage('system', `Error: ${message.message}`);
+                    console.error('Session error:', message.message);
+                    break;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // AUDIO/VIDEO CAPTURE
+        // ═══════════════════════════════════════════════════════════
+
+        async function initializeAudio() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Note: In full implementation, we would stream audio chunks
+                // to the WebSocket for Gemini Live API processing
+                console.log('✅ Microphone access granted');
+                addTranscriptMessage('system', '🎤 Microphone ready');
+
+            } catch (error) {
+                console.error('Failed to access microphone:', error);
+                addTranscriptMessage('system', '⚠️ Could not access microphone');
+            }
+        }
+
+        async function initializeVideo() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true 
+                });
+
+                const videoElement = document.getElementById('videoFeed');
+                videoElement.srcObject = videoStream;
+
+                document.getElementById('videoContainer').style.display = 'block';
+
+                console.log('✅ Camera access granted');
+                addTranscriptMessage('system', '📹 Camera ready');
+
+            } catch (error) {
+                console.error('Failed to access camera:', error);
+                addTranscriptMessage('system', '⚠️ Could not access camera');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CHURN SCORING & OFFERS
+        // ═══════════════════════════════════════════════════════════
+
+        function requestOffer() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Session not connected');
+                return;
+            }
+
+            // Simulate damage detection and frustration scoring
+            // In real implementation, this would come from Gemini's analysis
+            const damageTypes = ['wrong_item', 'broken', 'quality_issue', 'defective'];
+            const damageLabel = damageTypes[Math.floor(Math.random() * damageTypes.length)];
+            const frustrationScore = Math.random() * 10;
+
+            updateStatus('speaking', 'Analyzing and generating offer...');
+
+            ws.send(JSON.stringify({
+                type: 'request_offer',
+                damage_label: damageLabel,
+                frustration_score: frustrationScore
+            }));
+
+            addTranscriptMessage('user', `Issue detected: ${damageLabel}, frustration: ${frustrationScore.toFixed(1)}/10`);
+        }
+
+        function detectChurnLevel(offerText) {
+            const indicator = document.getElementById('churnIndicator');
+            const text = document.getElementById('churnText');
+
+            // Detect churn level from offer text patterns
+            if (offerText.includes('free replacement') || offerText.includes('upgrading your loyalty')) {
+                indicator.className = 'churn-indicator churn-critical';
+                text.textContent = '⚠️ Churn Risk: CRITICAL';
+            } else if (offerText.includes('priority reshipment') || offerText.includes('2-day delivery')) {
+                indicator.className = 'churn-indicator churn-high';
+                text.textContent = '⚠️ Churn Risk: HIGH';
+            } else if (offerText.includes('discount') && offerText.includes('15%')) {
+                indicator.className = 'churn-indicator churn-medium';
+                text.textContent = '⚠️ Churn Risk: MEDIUM';
+            } else {
+                indicator.className = 'churn-indicator churn-low';
+                text.textContent = '✅ Churn Risk: LOW';
+            }
+
+            indicator.style.display = 'block';
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // UI HELPERS
+        // ═══════════════════════════════════════════════════════════
+
+        function displayCustomerInfo(customer) {
+            const container = document.getElementById('customerInfo');
+            const details = document.getElementById('customerDetails');
+
+            const loyaltyClass = `badge-${customer.loyalty_tier}`;
+
+            details.innerHTML = `
+                <p><strong>${customer.name}</strong> <span class="loyalty-badge ${loyaltyClass}">${customer.loyalty_tier}</span></p>
+                <p>📧 ${customer.email}</p>
+                <p>📦 Total Orders: ${customer.total_orders} | Returns: ${customer.return_count}</p>
+                <p>💰 Lifetime Value: $${customer.lifetime_value.toFixed(2)}</p>
+                <p>📅 Customer for ${customer.tenure_months} months</p>
+            `;
+
+            container.style.display = 'block';
+        }
+
+        function updateStatus(status, text) {
+            const statusElement = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+
+            statusElement.className = `status-indicator status-${status}`;
+            statusText.textContent = text;
+        }
+
+        function addTranscriptMessage(role, text) {
+            const transcript = document.getElementById('transcript');
+            const message = document.createElement('div');
+
+            const messageClass = role === 'system' ? 'message-system' : 
+                                role === 'user' ? 'message-user' : 'message-agent';
+
+            const timestamp = new Date().toLocaleTimeString();
+
+            message.className = `message ${messageClass}`;
+            message.innerHTML = `
+                <div>${text}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            `;
+
+            transcript.appendChild(message);
+            transcript.scrollTop = transcript.scrollHeight;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // KEYBOARD SHORTCUTS
+        // ═══════════════════════════════════════════════════════════
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('setupSection').classList.contains('hidden')) {
+                startSession();
+            }
+        });
+
+        // Auto-focus customer ID input
+        window.addEventListener('load', () => {
+            document.getElementById('customerId').focus();
+        });
+    </script>
+</body>
+</html>
