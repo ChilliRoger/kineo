@@ -184,6 +184,13 @@ Respond naturally and empathetically (1-2 sentences):"""
             
         except Exception as e:
             print(f"❌ Error generating response: {e}")
+            
+            # Check if it's a quota error
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or "quota" in str(e).lower():
+                print("⚠️ API quota exceeded - using demo mode fallback")
+                # Generate contextual demo response
+                return self._generate_demo_response(user_input)
+            
             import traceback
             traceback.print_exc()
             return "I apologize, I'm having trouble processing that. Could you please repeat?"
@@ -265,6 +272,29 @@ Respond naturally and empathetically (1-2 sentences):"""
                 return score
         
         return 4.0  # Default moderate frustration
+    
+    def _generate_demo_response(self, user_input: str) -> str:
+        """Generate contextual demo response when API is unavailable"""
+        first_name = self.customer_data.get('name', 'valued customer').split()[0]
+        loyalty = self.customer_data.get('loyalty_tier', 'bronze').title()
+        
+        # Detect issue type and generate appropriate response
+        text_lower = user_input.lower()
+        
+        if 'wrong' in text_lower or 'incorrect' in text_lower or 'missing' in text_lower:
+            return f"I'm so sorry {first_name}, that's incredibly frustrating. Let me help you resolve this shipping error right away."
+        elif 'broken' in text_lower or 'damaged' in text_lower or 'shattered' in text_lower:
+            return f"{first_name}, I deeply apologize for the damaged product. As our {loyalty} member, we'll make this right immediately."
+        elif 'quality' in text_lower or 'disappointed' in text_lower or 'poor' in text_lower:
+            return f"I understand your disappointment, {first_name}. This doesn't meet our standards, and we value your feedback greatly."
+        elif 'defective' in text_lower or 'not working' in text_lower or 'broken' in text_lower:
+            return f"{first_name}, I'm truly sorry the product isn't working properly. Let's get you a replacement right away."
+        elif 'late' in text_lower or 'delayed' in text_lower or 'slow' in text_lower:
+            return f"I sincerely apologize for the delivery delay, {first_name}. That's not the experience we want for you."
+        elif any(greeting in text_lower for greeting in ['hello', 'hi', 'hey']):
+            return f"Hello {first_name}! I'm Kineo, and I'm here to help with your return. What happened with your order?"
+        else:
+            return f"Thank you for sharing that, {first_name}. I'm here to help resolve this for you quickly."
     
     async def stop(self):
         """Stop the session"""
