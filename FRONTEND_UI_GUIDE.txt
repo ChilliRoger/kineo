@@ -1,0 +1,119 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                     KINEO FRONTEND UI LAYOUT                         ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────┐
+│                                                                      │
+│                              Kineo                                   │
+│                 Voice Return Agent · E-Commerce                      │
+│                        Churn Prevention                              │
+│                                                                      │
+│ ──────────────────────────────────────────────────────────────────  │
+│                                                                      │
+│  Customer ID                                                         │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  customer_001                                                  │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Start Session                             │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│ ──────────────────────────────────────────────────────────────────  │
+│                                                                      │
+│  Customer Profile                                                    │
+│  Sarah Chen [GOLD]                                                   │
+│  📧 sarah.chen@example.com                                           │
+│  📦 Total Orders: 24 | Returns: 0                                    │
+│  💰 Lifetime Value: $3200.50                                         │
+│  📅 Customer for 18 months                                           │
+│                                                                      │
+│ ──────────────────────────────────────────────────────────────────  │
+│                                                                      │
+│  ● Listening... Speak now!                                           │
+│                                                                      │
+│  ⚠️ Churn Risk: HIGH                                                 │
+│                                                                      │
+│ ┌──────────────────────────────────────────────────────────────────┐│
+│ │  Transcript                                                       ││
+│ │                                                                   ││
+│ │  System: Session started: session_20260310154906                 ││
+│ │  System: 🎤 Microphone ready                                      ││
+│ │                                                                   ││
+│ │          ┌───────────────────────────────────────────────┐       ││
+│ │          │ I received the wrong item and I'm frustrated │       ││
+│ │          │ 3:49:06 PM                                    │       ││
+│ │          └───────────────────────────────────────────────┘       ││
+│ │                                                                   ││
+│ │  ┌────────────────────────────────────────────────────────────┐  ││
+│ │  │ Sarah, I really apologize that you received the wrong     │  ││
+│ │  │ item. Let me make this right: I'm arranging priority      │  ││
+│ │  │ reshipment with 2-day delivery, completely free. I'm      │  ││
+│ │  │ also adding a 25% discount code for your next order...    │  ││
+│ │  │ 3:49:07 PM                                                │  ││
+│ │  └────────────────────────────────────────────────────────────┘  ││
+│ └──────────────────────────────────────────────────────────────────┘│
+│                                                                      │
+│  ┌──────────────────────────┐  ┌──────────────────────────────────┐│
+│  │  Request Win-Back Offer  │  │         End Session              ││
+│  └──────────────────────────┘  └──────────────────────────────────┘│
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════
+COLOR SCHEME
+════════════════════════════════════════════════════════════════════════
+
+Background:      Gradient purple (#667eea → #764ba2)
+Container:       White with shadow
+Logo:            Purple gradient text
+Buttons:         Purple gradient / Red
+Status:          Green (listening) / Blue (speaking) / Yellow (connecting)
+Churn LOW:       Green background
+Churn MEDIUM:    Orange background
+Churn HIGH:      Red background
+Churn CRITICAL:  Dark red background
+User Messages:   Blue background, right-aligned
+Agent Messages:  Purple background, left-aligned
+System Messages: Gray background, centered
+
+════════════════════════════════════════════════════════════════════════
+INTERACTIVE ELEMENTS
+════════════════════════════════════════════════════════════════════════
+
+✅ Hover Effects
+   - Buttons lift up 2px with shadow
+   - Input fields highlight border
+   - Smooth color transitions
+
+✅ Animations
+   - Status dot pulses continuously
+   - Smooth fade-in for messages
+   - Auto-scroll transcript to bottom
+
+✅ Keyboard Shortcuts
+   - Enter key to start session
+   - Auto-focus on customer ID field
+
+✅ Responsive Design
+   - Max width: 800px
+   - Centered with padding
+   - Scrollable transcript area
+   - Mobile-friendly layout
+
+════════════════════════════════════════════════════════════════════════
+HOW TO USE
+════════════════════════════════════════════════════════════════════════
+
+1. Open browser to: http://localhost:8000
+2. Enter customer ID (or use default: customer_001)
+3. Click "Start Session" or press Enter
+4. Grant microphone permission when prompted
+5. View customer profile that loads automatically
+6. Speak naturally or click "Request Win-Back Offer"
+7. Watch status change: Connecting → Listening → Speaking
+8. See real-time transcript of conversation
+9. View churn risk level after offer is generated
+10. Click "End Session" when done
+
+════════════════════════════════════════════════════════════════════════
