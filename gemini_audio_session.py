@@ -78,16 +78,13 @@ Be empathetic, concise, and solution-oriented. Use the customer's first name."""
             raise
     
     async def send_audio(self, audio_data: str):
-        """Buffer audio data"""
+        """Buffer audio data (disabled - no speech-to-text available)"""
         if not self.is_active:
             return
         
-        # Add to buffer
+        # Just buffer audio, don't process automatically
+        # In production, you'd use Google Speech-to-Text API here
         self.audio_buffer.append(audio_data)
-        
-        # Process every 2 seconds worth of audio (~20 chunks)
-        if len(self.audio_buffer) >= 20:
-            await self._process_audio_buffer()
     
     async def send_video(self, video_frame: str):
         """Process video frame (optional, for context)"""
@@ -97,22 +94,32 @@ Be empathetic, concise, and solution-oriented. Use the customer's first name."""
     async def send_text(self, text: str):
         """Send text message"""
         if not self.is_active:
+            print(f"⚠️ Session not active, ignoring text: {text}")
             return
         
         try:
+            print(f"\n📨 Received user text: {text}")
+            
             # Generate response
             response_text = await self._generate_response(text)
+            print(f"🤖 Generated response: {response_text}")
             
             # Send text back
             if self.on_text_response:
                 await self.on_text_response(response_text)
+                print(f"✅ Sent response via callback")
+            else:
+                print(f"⚠️ No on_text_response callback set!")
             
             # Check if we should score churn
             if any(keyword in text.lower() for keyword in ['wrong', 'broken', 'defective', 'damaged', 'unhappy', 'frustrated']):
+                print(f"🎯 Triggering churn scoring...")
                 await self._trigger_churn_scoring(text, response_text)
                 
         except Exception as e:
             print(f"❌ Error sending text: {e}")
+            import traceback
+            traceback.print_exc()
     
     async def _process_audio_buffer(self):
         """Process buffered audio and generate response"""
@@ -158,6 +165,8 @@ User: {user_input}
 
 Respond naturally and empathetically (1-2 sentences):"""
             
+            print(f"🔄 Calling Gemini API with model: {self.model_id}")
+            
             # Generate with Gemini
             response = await self.client.aio.models.generate_content(
                 model=self.model_id,
@@ -165,6 +174,7 @@ Respond naturally and empathetically (1-2 sentences):"""
             )
             
             response_text = response.text
+            print(f"✅ Gemini API returned: {response_text}")
             
             # Add to history
             self.conversation_history.append({"role": "user", "content": user_input})
@@ -174,6 +184,8 @@ Respond naturally and empathetically (1-2 sentences):"""
             
         except Exception as e:
             print(f"❌ Error generating response: {e}")
+            import traceback
+            traceback.print_exc()
             return "I apologize, I'm having trouble processing that. Could you please repeat?"
     
     async def _trigger_churn_scoring(self, user_input: str, agent_response: str):
