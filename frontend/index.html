@@ -438,6 +438,10 @@
                 ws.close();
             }
 
+            // Stop audio/video capture
+            stopAudioCapture();
+            stopVideoCapture();
+
             // Stop media streams
             if (audioStream) {
                 audioStream.getTracks().forEach(track => track.stop());
@@ -486,6 +490,12 @@
                     }, 3000);
                     break;
 
+                case 'audio_response':
+                    // Play Gemini's voice response
+                    updateStatus('speaking', 'Agent is speaking...');
+                    playAudioResponse(message.audio_data);
+                    break;
+
                 case 'error':
                     addTranscriptMessage('system', `Error: ${message.message}`);
                     console.error('Session error:', message.message);
@@ -493,9 +503,49 @@
             }
         }
 
+        async function playAudioResponse(base64Audio) {
+            try {
+                // Decode base64 to ArrayBuffer
+                const binaryString = atob(base64Audio);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Create audio context if not exists
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 16000
+                    });
+                }
+
+                // Decode audio data
+                const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+
+                // Create audio source and play
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                
+                // Update status when playback completes
+                source.onended = () => {
+                    updateStatus('listening', 'Listening...');
+                };
+                
+                source.start(0);
+            } catch (error) {
+                console.error('Error playing audio response:', error);
+                updateStatus('listening', 'Listening...');
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════
-        // AUDIO/VIDEO CAPTURE
+        // AUDIO/VIDEO CAPTURE WITH REAL-TIME STREAMING
         // ═══════════════════════════════════════════════════════════
+
+        let audioContext = null;
+        let audioProcessor = null;
+        let videoInterval = null;
 
         async function initializeAudio() {
             try {
@@ -503,14 +553,51 @@
                     audio: {
                         echoCancellation: true,
                         noiseSuppression: true,
-                        autoGainControl: true
+                        autoGainControl: true,
+                        sampleRate: 16000  // 16kHz for Gemini
                     }
                 });
 
-                // Note: In full implementation, we would stream audio chunks
-                // to the WebSocket for Gemini Live API processing
-                console.log('✅ Microphone access granted');
-                addTranscriptMessage('system', '🎤 Microphone ready');
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000
+                });
+
+                const source = audioContext.createMediaStreamSource(audioStream);
+                
+                // Create script processor for audio chunks
+                const bufferSize = 4096;
+                audioProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+                
+                audioProcessor.onaudioprocess = (e) => {
+                    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+                    
+                    // Get audio data
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    
+                    // Convert Float32Array to Int16Array (PCM16)
+                    const pcm16 = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    
+                    // Convert to base64
+                    const base64Audio = arrayBufferToBase64(pcm16.buffer);
+                    
+                    // Send to backend
+                    ws.send(JSON.stringify({
+                        type: 'audio_chunk',
+                        data: base64Audio
+                    }));
+                };
+                
+                // Connect nodes
+                source.connect(audioProcessor);
+                audioProcessor.connect(audioContext.destination);
+
+                console.log('✅ Microphone access granted - streaming to Gemini');
+                addTranscriptMessage('system', '🎤 Microphone ready - streaming audio');
 
             } catch (error) {
                 console.error('Failed to access microphone:', error);
@@ -521,7 +608,10 @@
         async function initializeVideo() {
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: true 
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
                 });
 
                 const videoElement = document.getElementById('videoFeed');
@@ -529,12 +619,67 @@
 
                 document.getElementById('videoContainer').style.display = 'block';
 
-                console.log('✅ Camera access granted');
-                addTranscriptMessage('system', '📹 Camera ready');
+                // Capture and send video frames every 2 seconds
+                const canvas = document.createElement('canvas');
+                canvas.width = 640;
+                canvas.height = 480;
+                const ctx = canvas.getContext('2d');
+
+                videoInterval = setInterval(() => {
+                    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+                    
+                    // Draw current frame to canvas
+                    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to JPEG base64
+                    canvas.toBlob((blob) => {
+                        blob.arrayBuffer().then(buffer => {
+                            const base64Frame = arrayBufferToBase64(buffer);
+                            
+                            // Send to backend
+                            ws.send(JSON.stringify({
+                                type: 'video_frame',
+                                data: base64Frame
+                            }));
+                        });
+                    }, 'image/jpeg', 0.8);
+                    
+                }, 2000);  // Send frame every 2 seconds
+
+                console.log('✅ Camera access granted - streaming to Gemini');
+                addTranscriptMessage('system', '📹 Camera ready - streaming video');
 
             } catch (error) {
                 console.error('Failed to access camera:', error);
                 addTranscriptMessage('system', '⚠️ Could not access camera');
+            }
+        }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function stopAudioCapture() {
+            if (audioProcessor) {
+                audioProcessor.disconnect();
+                audioProcessor = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
+        function stopVideoCapture() {
+            if (videoInterval) {
+                clearInterval(videoInterval);
+                videoInterval = null;
             }
         }
 

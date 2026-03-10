@@ -24,6 +24,7 @@ from agent import (
 )
 from tools.firestore_client import get_customer, list_all_customers
 from tools.churn_scorer import score_churn
+from gemini_live_session import GeminiLiveSession
 
 # Load environment variables
 load_dotenv()
@@ -114,12 +115,13 @@ async def list_customers():
 
 
 # ═══════════════════════════════════════════════════════════
-# WEBSOCKET - LIVE SESSION
+# WEBSOCKET - LIVE SESSION WITH GEMINI
 # ═══════════════════════════════════════════════════════════
 
 class SessionManager:
     """
     Manages active WebSocket sessions with Gemini Live API.
+    Each session has a GeminiLiveSession that handles bidirectional streaming.
     """
     
     def __init__(self):
@@ -135,17 +137,56 @@ class SessionManager:
         """
         session_id = f"session_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         
-        # Get customer profile
         try:
+            # Get customer profile first
             customer = get_customer(customer_id)
             
+            # Create Gemini Live session
+            gemini_session = GeminiLiveSession(customer_id, session_id)
+            
+            # Set up callbacks to send Gemini responses to frontend
+            async def on_audio_response(audio_data: str):
+                """Send Gemini's audio response to frontend"""
+                await websocket.send_json({
+                    "type": "audio_response",
+                    "data": audio_data
+                })
+            
+            async def on_text_response(text: str):
+                """Send Gemini's text (transcript) to frontend"""
+                await websocket.send_json({
+                    "type": "transcript",
+                    "text": text,
+                    "role": "agent"
+                })
+            
+            async def on_tool_call(tool_result: dict):
+                """Send churn scoring results to frontend"""
+                await websocket.send_json({
+                    "type": "offer",
+                    "text": tool_result['result']['offer'],
+                    "churn_score": tool_result['result']['score'],
+                    "churn_tier": tool_result['result']['tier'],
+                    "session_id": session_id
+                })
+            
+            # Attach callbacks
+            gemini_session.on_audio_response = on_audio_response
+            gemini_session.on_text_response = on_text_response
+            gemini_session.on_tool_call = on_tool_call
+            
+            # Store session
             self.active_sessions[session_id] = {
                 "customer_id": customer_id,
                 "customer": customer,
                 "websocket": websocket,
+                "gemini_session": gemini_session,
                 "started_at": datetime.utcnow().isoformat(),
                 "messages": []
             }
+            
+            # Start Gemini session in background
+            asyncio.create_task(gemini_session.start())
             
             return session_id
             
@@ -156,9 +197,13 @@ class SessionManager:
         """Gets session data."""
         return self.active_sessions.get(session_id)
     
-    def close_session(self, session_id: str):
+    async def close_session(self, session_id: str):
         """Closes and removes a session."""
         if session_id in self.active_sessions:
+            session = self.active_sessions[session_id]
+            # Stop Gemini session
+            if 'gemini_session' in session:
+                await session['gemini_session'].stop()
             del self.active_sessions[session_id]
 
 
@@ -169,15 +214,15 @@ session_manager = SessionManager()
 @app.websocket("/session")
 async def websocket_session(websocket: WebSocket):
     """
-    WebSocket endpoint for live voice + vision sessions.
+    WebSocket endpoint for live voice + vision sessions with Gemini.
     
     Flow:
     1. Client connects with customer_id
     2. Server creates Gemini Live session
-    3. Audio/video streams bidirectionally
-    4. Server calls tools (get_customer, score_and_respond) when needed
+    3. Audio/video streams bidirectionally in real-time
+    4. Gemini calls tools (score_and_respond) automatically
     5. Agent speaks personalized offer
-    6. Session ends, data logged to Firestore
+    6. Session ends, data already logged to Firestore
     """
     await websocket.accept()
     session_id = None
@@ -195,9 +240,10 @@ async def websocket_session(websocket: WebSocket):
             await websocket.close()
             return
         
-        # Create session
+        # Create session with Gemini Live
         session_id = await session_manager.create_session(websocket, customer_id)
         session = session_manager.get_session(session_id)
+        gemini_session = session['gemini_session']
         
         # Send session started confirmation
         await websocket.send_json({
@@ -206,7 +252,10 @@ async def websocket_session(websocket: WebSocket):
             "customer": session["customer"]
         })
         
-        print(f"\n✅ Session started: {session_id} (Customer: {customer_id})")
+        print(f"\n✅ Gemini Live session started: {session_id} (Customer: {customer_id})")
+        
+        # Give Gemini session a moment to connect
+        await asyncio.sleep(1)
         
         # Main session loop - handle incoming messages
         while True:
@@ -216,16 +265,17 @@ async def websocket_session(websocket: WebSocket):
                 
                 # Handle different message types
                 if message_type == "audio_chunk":
-                    # In full implementation, this would stream to Gemini Live API
-                    # For now, log that we received audio
-                    print(f"📢 Received audio chunk from {customer_id}")
+                    # Stream audio to Gemini Live API
+                    audio_data = message.get("data")
+                    await gemini_session.send_audio(audio_data)
                     
                 elif message_type == "video_frame":
-                    # In full implementation, this would stream to Gemini Live API
-                    print(f"📹 Received video frame from {customer_id}")
+                    # Stream video frame to Gemini Live API
+                    frame_data = message.get("data")
+                    await gemini_session.send_video(frame_data)
                     
                 elif message_type == "transcript":
-                    # Store user transcript
+                    # Send text to Gemini
                     transcript = message.get("text", "")
                     session["messages"].append({
                         "role": "user",
@@ -233,7 +283,9 @@ async def websocket_session(websocket: WebSocket):
                         "timestamp": datetime.utcnow().isoformat()
                     })
                     
-                    # Echo back (in full implementation, Gemini would respond)
+                    await gemini_session.send_text(transcript)
+                    
+                    # Echo back to frontend
                     await websocket.send_json({
                         "type": "transcript",
                         "text": transcript,
@@ -241,11 +293,11 @@ async def websocket_session(websocket: WebSocket):
                     })
                     
                 elif message_type == "request_offer":
-                    # Client requesting churn scoring and offer
+                    # Manual trigger for testing (in real use, Gemini calls tool automatically)
                     damage_label = message.get("damage_label", "quality_issue")
                     frustration_score = message.get("frustration_score", 5.0)
                     
-                    # Call churn scoring tool
+                    # Call churn scoring directly
                     result = tool_score_and_respond(
                         customer_id=customer_id,
                         damage_label=damage_label,
@@ -253,19 +305,12 @@ async def websocket_session(websocket: WebSocket):
                     )
                     
                     if result["success"]:
-                        # Send offer to client
                         await websocket.send_json({
                             "type": "offer",
                             "text": result["offer"],
                             "session_id": result["session_id"]
                         })
-                        
-                        print(f"✅ Offer generated for {customer_id}: {result['offer'][:80]}...")
-                    else:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": result.get("error", "Unknown error")
-                        })
+                        print(f"✅ Manual offer generated for {customer_id}")
                 
                 elif message_type == "end_session":
                     print(f"👋 Session ending: {session_id}")
@@ -292,7 +337,7 @@ async def websocket_session(websocket: WebSocket):
     finally:
         # Cleanup
         if session_id:
-            session_manager.close_session(session_id)
+            await session_manager.close_session(session_id)
         
         # Close websocket if still open
         if websocket.client_state.name == "CONNECTED":
