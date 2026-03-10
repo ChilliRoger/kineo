@@ -342,8 +342,20 @@
             <!-- Transcript Area -->
             <div id="transcript" class="transcript-area">
                 <div class="message message-system">
-                    <div>Session starting... Speak naturally!</div>
+                    <div>Session starting... Type your message below!</div>
                 </div>
+            </div>
+
+            <!-- Text Input for Testing -->
+            <div class="input-group" style="margin-top: 15px;">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your message here (e.g., 'I received the wrong item and I'm frustrated')"
+                    style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"
+                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                />
+                <button class="btn-primary" onclick="sendMessage()" style="margin-top: 10px; width: auto; padding: 10px 20px;">Send Message</button>
             </div>
 
             <!-- Control Buttons -->
@@ -461,6 +473,34 @@
         }
 
         // ═══════════════════════════════════════════════════════════
+        // SEND MESSAGE FUNCTION
+        // ═══════════════════════════════════════════════════════════
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('Cannot send message - no connection or empty message');
+                return;
+            }
+
+            console.log('📤 Sending user message:', message);
+
+            // Send to backend
+            ws.send(JSON.stringify({
+                type: 'transcript',
+                text: message
+            }));
+
+            // Clear input
+            input.value = '';
+
+            // Show in transcript immediately
+            addTranscriptMessage('user', message);
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // WEBSOCKET MESSAGE HANDLING
         // ═══════════════════════════════════════════════════════════
 
@@ -470,12 +510,18 @@
             switch (message.type) {
                 case 'session_started':
                     sessionId = message.session_id;
-                    updateStatus('listening', 'Listening... Speak now!');
+                    updateStatus('listening', 'Ready! Type your message below');
                     addTranscriptMessage('system', `Session started: ${sessionId}`);
                     break;
 
                 case 'transcript':
                     addTranscriptMessage(message.role, message.text);
+                    
+                    // If it's an agent message, also speak it
+                    if (message.role === 'agent') {
+                        updateStatus('speaking', 'Agent is responding...');
+                        speakText(message.text);
+                    }
                     break;
 
                 case 'offer':
@@ -485,15 +531,14 @@
                     // Parse churn level from offer message
                     detectChurnLevel(message.text);
                     
-                    setTimeout(() => {
-                        updateStatus('listening', 'Listening...');
-                    }, 3000);
+                    // Speak the offer
+                    speakText(message.text);
                     break;
 
                 case 'audio_response':
                     // Play Gemini's voice response
                     updateStatus('speaking', 'Agent is speaking...');
-                    playAudioResponse(message.audio_data);
+                    playAudioResponse(message.data || message.audio_data);
                     break;
 
                 case 'error':
@@ -560,14 +605,14 @@
                 utterance.volume = 1.0;
                 
                 utterance.onend = () => {
-                    updateStatus('listening', 'Listening...');
+                    updateStatus('listening', 'Ready - type your next message');
                 };
                 
                 window.speechSynthesis.speak(utterance);
                 console.log('🔊 Speaking:', text);
             } else {
                 console.warn('Speech synthesis not supported');
-                updateStatus('listening', 'Listening...');
+                updateStatus('listening', 'Ready - type your next message');
             }
         }
 
