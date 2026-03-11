@@ -24,6 +24,7 @@ from agent import (
 )
 from tools.firestore_client import get_customer, list_all_customers
 from tools.churn_scorer import score_churn
+from tools.order_service import order_service, OrderStatus
 from gemini_audio_session import GeminiAudioSession
 
 # Load environment variables
@@ -112,6 +113,130 @@ async def list_customers():
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing customers: {str(e)}")
+
+
+# ═══════════════════════════════════════════════════════════
+# ORDER MANAGEMENT ENDPOINTS
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/orders/customer/{customer_id}")
+async def get_customer_orders(customer_id: str, limit: int = 10):
+    """
+    Get all orders for a specific customer.
+    
+    Args:
+        customer_id: Customer identifier
+        limit: Maximum number of orders to return (default: 10)
+    """
+    try:
+        orders = order_service.get_customer_orders(customer_id, limit)
+        return JSONResponse(content={
+            "success": True,
+            "count": len(orders),
+            "orders": orders
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching orders: {str(e)}")
+
+
+@app.get("/orders/{order_id}")
+async def get_order(order_id: str):
+    """
+    Get details of a specific order.
+    
+    Args:
+        order_id: Order identifier
+    """
+    try:
+        order = order_service.get_order(order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        return JSONResponse(content={
+            "success": True,
+            "order": order
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching order: {str(e)}")
+
+
+@app.get("/orders/{order_id}/updates")
+async def get_order_status_updates(order_id: str):
+    """
+    Get all status updates for an order.
+    
+    Args:
+        order_id: Order identifier
+    """
+    try:
+        updates = order_service.get_order_updates(order_id)
+        return JSONResponse(content={
+            "success": True,
+            "count": len(updates),
+            "updates": updates
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching updates: {str(e)}")
+
+
+# ═══════════════════════════════════════════════════════════
+# WEBHOOK ENDPOINT
+# ═══════════════════════════════════════════════════════════
+
+@app.post("/webhook/order-update")
+async def handle_order_webhook(webhook_data: dict):
+    """
+    Webhook endpoint for receiving order status updates from external systems.
+    
+    Expected payload:
+    {
+        "event_type": "order.shipped" | "order.delivered" | "replacement.shipped" | "return.approved",
+        "order_id": "ORD-2024-001",
+        "tracking_number": "1Z999AA10123456784" (optional),
+        "notes": "Additional information" (optional)
+    }
+    
+    Supported event types:
+    - order.shipped: Original order has shipped
+    - order.delivered: Order has been delivered
+    - replacement.shipped: Replacement product has shipped
+    - return.approved: Return request has been approved
+    
+    The webhook will:
+    1. Update order status in Firestore
+    2. Create status update record
+    3. Notify active customer sessions via WebSocket
+    """
+    try:
+        print(f"\n📥 Received webhook: {webhook_data}")
+        
+        # Process webhook
+        result = order_service.process_webhook(webhook_data)
+        
+        if not result["success"]:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": result["message"]}
+            )
+        
+        # TODO: Notify active WebSocket sessions if customer is connected
+        # This would require tracking active sessions by customer_id
+        customer_id = result.get("customer_id")
+        if customer_id:
+            print(f"   📧 Order update for customer: {customer_id}")
+            # Future: Send notification via WebSocket to active session
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": result["message"],
+            "order_id": result["order_id"]
+        })
+        
+    except Exception as e:
+        print(f"❌ Webhook error: {e}")
+        raise HTTPException(status_code=500, detail=f"Webhook processing error: {str(e)}")
 
 
 # ═══════════════════════════════════════════════════════════

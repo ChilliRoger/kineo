@@ -130,7 +130,7 @@ class OrderService:
         Update order status and create update record
         
         Args:
-            order_id: Order identifier
+            order_id: Order identifier (can be document ID or order_id field)
             new_status: New order status
             notes: Optional notes about the update
             tracking_number: Optional tracking number for shipments
@@ -139,6 +139,17 @@ class OrderService:
             True if successful, False otherwise
         """
         try:
+            # First, try to find the document by order_id field
+            docs = self.orders_ref.where("order_id", "==", order_id).limit(1).stream()
+            doc_id = None
+            for doc in docs:
+                doc_id = doc.id
+                break
+            
+            # If not found, try using order_id as document ID
+            if not doc_id:
+                doc_id = order_id
+            
             # Update order document
             update_data = {
                 "status": new_status,
@@ -148,7 +159,7 @@ class OrderService:
             if tracking_number:
                 update_data["tracking_number"] = tracking_number
             
-            self.orders_ref.document(order_id).update(update_data)
+            self.orders_ref.document(doc_id).update(update_data)
             
             # Create update record
             update_record = {
