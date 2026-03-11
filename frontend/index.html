@@ -515,10 +515,10 @@
                     break;
 
                 case 'transcript':
-                    addTranscriptMessage(message.role, message.text);
-                    
-                    // If it's an agent message, also speak it
+                    // Only display agent messages from WebSocket
+                    // User messages are already shown when sent
                     if (message.role === 'agent') {
+                        addTranscriptMessage(message.role, message.text);
                         updateStatus('speaking', 'Agent is responding...');
                         speakText(message.text);
                     }
