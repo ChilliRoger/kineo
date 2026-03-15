@@ -65,10 +65,12 @@ def get_customer(customer_id: str) -> Dict:
 def save_session_log(
     session_id: str,
     customer_id: str,
-    damage_label: str,
-    frustration_score: float,
-    churn_score: float,
-    offer_given: str
+    damage_label: str = "unknown", 
+    frustration_score: float = 0.0, 
+    churn_score: float = 0.0, 
+    offer_given: str = "", 
+    transcript: list = None, 
+    **kwargs
 ) -> None:
     """
     Writes a complete session record to Firestore after each interaction ends.
@@ -80,6 +82,7 @@ def save_session_log(
         frustration_score: Detected frustration level (0-10)
         churn_score: Calculated churn risk score (0-100)
         offer_given: The win-back offer that was presented
+        transcript: List of message objects
     """
     try:
         session_data = {
@@ -89,9 +92,13 @@ def save_session_log(
             'frustration_score': frustration_score,
             'churn_score': churn_score,
             'offer_given': offer_given,
+            'transcript': transcript or [],
             'timestamp': firestore.SERVER_TIMESTAMP,
             'created_at': datetime.utcnow().isoformat()
         }
+        
+        # Merge any extra kwargs
+        session_data.update(kwargs)
         
         doc_ref = db.collection(SESSIONS_COLLECTION).document(session_id)
         doc_ref.set(session_data)
