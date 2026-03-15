@@ -81,8 +81,8 @@
     }
     .marquee-content {
       display: flex;
-      width: 200%;
-      animation: marquee 10s linear infinite;
+      width: max-content;
+      animation: marquee 60s linear infinite;
     }
     .marquee-item {
       white-space: nowrap;
@@ -254,7 +254,94 @@
         box-shadow: var(--shadow-lg);
         padding: 40px;
         width: 100%;
-        max-width: 800px;
+        max-width: 900px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    .demo-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 24px;
+        height: 450px;
+    }
+    .demo-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        background: var(--black);
+        border: var(--border);
+        box-shadow: var(--shadow);
+        height: 100%;
+        overflow: hidden;
+    }
+    .chat-header {
+        background: var(--yellow);
+        padding: 8px 16px;
+        border-bottom: var(--border);
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+    .chat-messages {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .message {
+        max-width: 85%;
+        padding: 12px 16px;
+        font-family: var(--font-body);
+        font-size: 14px;
+        line-height: 1.4;
+        border: 2px solid var(--black);
+        box-shadow: 4px 4px 0px var(--black);
+    }
+    .message-agent {
+        align-self: flex-start;
+        background: var(--white);
+    }
+    .message-user {
+        align-self: flex-end;
+        background: var(--pink);
+        color: var(--white);
+        box-shadow: -4px 4px 0px var(--black);
+        text-align: right;
+    }
+    .chat-input-area {
+        border-top: var(--border);
+        display: flex;
+        background: var(--white);
+    }
+    .chat-input {
+        flex: 1;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0;
+        padding: 12px 16px !important;
+        font-family: var(--font-body);
+        font-size: 14px;
+    }
+    .chat-send {
+        background: var(--yellow);
+        border: none;
+        border-left: var(--border);
+        padding: 0 20px;
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .chat-send:active {
+        background: var(--orange);
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -340,14 +427,29 @@
     <section class="hero-bg">
         <div class="marquee-container">
             <div class="marquee-content">
-                <div class="marquee-item">Kineo AI Voice</div>
-                <div class="marquee-item">Real-Time</div>
-                <div class="marquee-item">Low Latency</div>
-                <div class="marquee-item">WebSockets</div>
-                <div class="marquee-item">Kineo AI Voice</div>
-                <div class="marquee-item">Real-Time</div>
-                <div class="marquee-item">Low Latency</div>
-                <div class="marquee-item">WebSockets</div>
+                <!-- SEGMENT 1 (Original) -->
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+
+                <!-- SEGMENT 2 (Clone for Loop) -->
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div><div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div><div class="marquee-item">WebSockets</div>
             </div>
         </div>
 
@@ -478,19 +580,38 @@
                 <span id="connection-status">DISCONNECTED</span>
             </div>
 
-            <div class="input-group">
-                <label>Agent Name</label>
-                <input type="text" id="agent-name" placeholder="Kineo" value="Kineo" />
-            </div>
+            <div class="demo-layout">
+                <!-- Left: Controls -->
+                <div class="demo-controls">
+                    <div class="input-group">
+                        <label>Customer ID</label>
+                        <input type="text" id="customer-id" placeholder="CUST_123456" value="CUST_123456" />
+                    </div>
 
-            <div style="display:flex; gap:16px; margin-bottom:20px;">
-                <button id="start-btn" class="btn btn-primary" style="flex:1;">START SESSION</button>
-                <button id="stop-btn" class="btn btn-danger" style="flex:1;" disabled>STOP</button>
-            </div>
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <button id="start-btn" class="btn btn-primary">START SESSION</button>
+                        <button id="stop-btn" class="btn btn-danger" disabled>STOP SESSION</button>
+                    </div>
 
-            <div class="code-block" id="logs">
-                <div style="color:var(--yellow)">// System Ready</div>
-                <div style="color:#888">// Waiting for connection...</div>
+                    <div class="code-block" id="logs" style="flex:1;">
+                        <div style="color:var(--yellow)">// System Ready</div>
+                        <div style="color:#888">// Waiting for connection...</div>
+                    </div>
+                </div>
+
+                <!-- Right: Chat Interface -->
+                <div class="chat-container">
+                    <div class="chat-header">Kineo Live Transcript</div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message message-agent">
+                            Hello! I'm Kineo. How can I help you with your order today?
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." disabled>
+                        <button class="chat-send" id="chat-send" disabled>SEND</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -499,14 +620,15 @@
 
 <script>
     // WEBSOCKET & AUDIO LOGIC
-    // KEPT EXACTLY AS BEFORE, Just IDs mapped
-
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
     const statusText = document.getElementById('connection-status');
     const statusBox = document.getElementById('status-indicator');
     const logs = document.getElementById('logs');
-    const agentNameInput = document.getElementById('agent-name');
+    const customerIdInput = document.getElementById('customer-id');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
 
     let socket;
     let audioContext;
@@ -522,24 +644,29 @@
         logs.scrollTop = logs.scrollHeight;
     }
 
+    function addMessage(text, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isUser ? 'message-user' : 'message-agent'}`;
+        msgDiv.textContent = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
     startBtn.addEventListener('click', async () => {
-        const agentName = agentNameInput.value || "Kineo";
-        log(`Initializing connection to agent: ${agentName}...`);
+        const customerId = customerIdInput.value || "anonymous";
+        log(`Initializing connection for: ${customerId}...`);
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
-            // Re-use logic for Audio Context to handle user interaction limits
             if (!audioContext) {
                  audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
             } else if (audioContext.state === 'suspended') {
                 await audioContext.resume();
             }
             
-            // Connect to WebSocket
-            // Note: The python server is at ws://localhost:8000/ws/{client_id}
-            const clientId = Math.floor(Math.random() * 1000);
-            socket = new WebSocket(`ws://localhost:8000/ws/${clientId}`);
+            // Connect to WebSocket /session
+            socket = new WebSocket(`ws://localhost:8000/session`);
 
             socket.onopen = () => {
                 log('WebSocket Connected', 'success');
@@ -547,20 +674,31 @@
                 statusBox.style.background = 'var(--green)';
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
+                chatInput.disabled = false;
+                chatSend.disabled = false;
                 
-                // Start Audio Streaming
+                // 1. Initial Handshake
+                socket.send(JSON.stringify({ customer_id: customerId }));
+
+                // 2. Start Audio Streaming
                 startAudioStreaming(stream);
             };
 
             socket.onmessage = async (event) => {
-                // Determine if it's JSON or Audio Blob
-                if (typeof event.data === 'string') {
-                    console.log("Received text:", event.data);
-                    log(`Server: ${event.data}`);
-                } else {
-                    // Blob/ArrayBuffer -> Audio
-                    log('Received Audio Chunk');
-                    playAudioChunk(event.data);
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'transcript') {
+                        addMessage(data.data, false);
+                    } else if (data.type === 'audio_chunk') {
+                        // Backend sends base64 audio
+                        playBase64Audio(data.data);
+                    } else if (data.type === 'offer') {
+                        log(`OFFER RECEIVED: ${data.data}`, 'success');
+                        addMessage(`[WIN-BACK OFFER]: ${data.data}`, false);
+                    }
+                } catch (e) {
+                    console.log("Raw message:", event.data);
                 }
             };
 
@@ -570,20 +708,29 @@
             };
 
             socket.onerror = (err) => {
-                console.error(err);
                 log('WebSocket Error', 'error');
             };
 
         } catch (err) {
-            console.error(err);
             log(`Mic Error: ${err.message}`, 'error');
         }
     });
 
+    chatSend.addEventListener('click', () => {
+        const text = chatInput.value.trim();
+        if (text && socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'text', data: text }));
+            addMessage(text, true);
+            chatInput.value = '';
+        }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') chatSend.click();
+    });
+
     stopBtn.addEventListener('click', () => {
         if (socket) socket.close();
-        if (audioContext && audioContext.state !== 'closed') audioContext.suspend(); 
-        // We don't close AC to reuse it, just suspend or disconnect mic
         if (microphone) microphone.disconnect();
         if (scriptProcessor) scriptProcessor.disconnect();
         resetUI();
@@ -592,25 +739,28 @@
     function resetUI() {
         startBtn.disabled = false;
         stopBtn.disabled = true;
+        chatInput.disabled = true;
+        chatSend.disabled = true;
         statusText.textContent = 'DISCONNECTED';
-        statusBox.style.background = 'var(--blue)'; // Back to Info/Blue
+        statusBox.style.background = 'var(--blue)';
     }
 
     function startAudioStreaming(stream) {
         microphone = audioContext.createMediaStreamSource(stream);
-        // Buffer size 4096 = ~250ms latency at 16k sample rate
-        // ScriptProcessor is deprecated but easiest for raw PCM demo without Worklets
         scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
-        scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+        scriptProcessor.onaudioprocess = (e) => {
             if (!socket || socket.readyState !== WebSocket.OPEN) return;
 
-            const inputBuffer = audioProcessingEvent.inputBuffer;
-            const inputData = inputBuffer.getChannelData(0);
-
-            // Convert Float32 to Int16 (PCM)
+            const inputData = e.inputBuffer.getChannelData(0);
             const pcmData = floatTo16BitPCM(inputData);
-            socket.send(pcmData);
+            
+            // Convert ArrayBuffer to Base64 to match backend JSON protocol
+            const base64Audio = arrayBufferToBase64(pcmData);
+            socket.send(JSON.stringify({
+                type: 'audio_chunk',
+                data: base64Audio
+            }));
         };
 
         microphone.connect(scriptProcessor);
@@ -628,18 +778,30 @@
         return buffer;
     }
 
-    async function playAudioChunk(data) {
-        // Simple implementation: decode and play
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    async function playBase64Audio(base64) {
         try {
-            const arrayBuffer = await data.arrayBuffer();
-             // Important: copy structure for decoding
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+            
+            const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
             const source = audioContext.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(audioContext.destination);
             source.start(0);
         } catch (e) {
-            console.error("Error playing audio chunk", e);
+            console.error("Audio play error:", e);
         }
     }
 </script>
