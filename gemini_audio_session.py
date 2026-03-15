@@ -350,7 +350,7 @@ Respond naturally and empathetically (1-2 sentences):"""
             
             # Send offer
             if self.on_text_response:
-                await self.on_text_response(f"\n💡 {result['offer']}")
+                await self.on_text_response(f"\n {result['offer']}")
             
             if self.on_tool_call:
                 await self.on_tool_call({

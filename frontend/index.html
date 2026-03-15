@@ -690,7 +690,7 @@
 
     function speakText(text) {
         if (!synth) return;
-        if (synth.speaking) synth.cancel(); // Interrupt previous speech
+        // if (synth.speaking) synth.cancel(); // REMOVED: Allow queuing for sequential playback
 
         const utterThis = new SpeechSynthesisUtterance(text);
         utterThis.rate = 1.0;
