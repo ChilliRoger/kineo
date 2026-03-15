@@ -187,12 +187,15 @@
     .chart-container {
         display: flex;
         align-items: flex-end;
-        gap: 30px;
+        justify-content: center;
+        gap: 40px;
         height: 300px;
         margin-top: 40px;
-        padding: 20px;
+        margin-bottom: 60px; /* Space for labels */
+        padding: 0 20px;    /* No bottom padding so bars touch axis */
         border-bottom: var(--border);
         border-left: var(--border);
+        position: relative; /* Context for axis alignment if needed */
     }
     .bar {
         width: 80px;
@@ -201,24 +204,24 @@
         box-shadow: var(--shadow);
         position: relative;
         transition: height 1s;
-        margin-right: 20px;
     }
     .bar-label {
         position: absolute;
-        bottom: -30px;
+        bottom: -40px;
         width: 100%;
         text-align: center;
         font-family: var(--font-mono);
         font-weight: 700;
-        font-size: 12px;
+        font-size: 14px;
+        letter-spacing: 1px;
     }
     .bar-val {
         position: absolute;
-        top: -30px;
+        top: -40px;
         width: 100%;
         text-align: center;
         font-family: var(--font-display);
-        font-size: 24px;
+        font-size: 32px;
     }
 
     /* ── FLOW ── */
@@ -359,27 +362,80 @@
         </div>
     </section>
 
-    <!-- SLIDE 2: PROBLEM -->
-    <section>
-        <span class="section-number">01</span>
-        <h2 class="slide-title">The Bottleneck</h2>
-        <p style="max-width:600px; text-align:center; font-family:var(--font-body); font-size:18px; margin-bottom:40px;">
-            Human agents cannot scale. Traditional voice bots are too slow. The latency kills the conversation.
+    <!-- SLIDE 1.5: THE CHURN PROBLEM -->
+    <section style="background:var(--white);">
+        <span class="section-number" style="color:var(--red);">01</span>
+        <h2 class="slide-title">THE SILENT EXIT</h2>
+        <p style="max-width:700px; text-align:center; font-family:var(--font-body); font-size:24px; margin-bottom:60px;">
+            Returns are inevitable. Churn is optional.
         </p>
 
-        <div class="chart-container">
-            <div class="bar" style="height: 100px; background: var(--blue);">
-                <div class="bar-val">2s</div>
-                <div class="bar-label">Kineo</div>
+        <div style="display:flex; gap:60px; align-items:center; flex-wrap:wrap; justify-content:center;">
+            
+            <!-- The Stat -->
+            <div class="card" style="background:var(--red); color:var(--white); width:350px; padding:40px; transform:rotate(-2deg); box-shadow:12px 12px 0px var(--black);">
+                <div style="font-family:var(--font-display); font-size:120px; line-height:0.8;">70%</div>
+                <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; margin-top:20px; line-height:1.4; letter-spacing:1px;">OF CUSTOMERS CHURN AFTER A SINGLE RETURN</div>
             </div>
-            <div class="bar" style="height: 200px; background: var(--pink);">
-                <div class="bar-val">9s</div>
-                <div class="bar-label">Human</div>
+
+            <!-- The Reality -->
+            <div style="display:flex; flex-direction:column; gap:30px;">
+                <div class="card" style="background:var(--black); color:var(--white); padding:30px; width:450px; text-align:left; position:relative;">
+                    <div style="color:var(--yellow); font-family:var(--font-mono); font-size:12px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Current Reality</div>
+                    <div style="font-family:var(--font-body); font-size:18px; line-height:1.4;">
+                        "Refund processed. Have a nice day."<br>
+                        <span style="color:#888; font-size:16px;">(Customer feels discarded &rarr; Leaves forever)</span>
+                    </div>
+                </div>
+
+                <div class="card" style="background:var(--white); border:var(--border); padding:30px; width:450px; text-align:left;">
+                    <div style="color:var(--pink); font-family:var(--font-mono); font-size:12px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">The Opportunity</div>
+                    <div style="font-family:var(--font-body); font-size:18px; line-height:1.4;">
+                        The return moment is the <strong style="background:var(--yellow);">highest friction point</strong>.<br>
+                        It is the critical moment to save the relationship.
+                    </div>
+                </div>
             </div>
-            <div class="bar" style="height: 240px; background: var(--red);">
-                <div class="bar-val">12s</div>
-                <div class="bar-label">Legacy Bot</div>
+        </div>
+    </section>
+
+    <!-- SLIDE 2: HOW IT WORKS -->
+    <section>
+        <span class="section-number">02</span>
+        <h2 class="slide-title">THE MECHANISM</h2>
+        <p style="max-width:800px; text-align:center; font-family:var(--font-body); font-size:20px; line-height:1.5; margin-bottom:60px;">
+            Real-time voice + vision agent. Kineo understands the problem, scores the risk,<br>and wins the customer back—all in under 60 seconds.
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:30px; max-width:1200px; width:100%;">
+            
+            <!-- Step 1 -->
+            <div class="card" style="border:var(--border); box-shadow:var(--shadow); padding:30px; text-align:left; background:var(--white); display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="background:var(--yellow); color:var(--black); font-family:var(--font-mono); font-weight:700; font-size:12px; display:inline-block; padding:6px 10px; margin-bottom:20px; border:2px solid var(--black);">INPUT</div>
+                <h3 style="font-family:var(--font-display); font-size:40px; margin-bottom:16px; line-height:0.9;">LISTEN & WATCH</h3>
+                <p style="font-family:var(--font-body); font-size:16px; line-height:1.5; color:#333;">
+                    Customer starts a live session. <strong>Gemini Live API</strong> processes voice tone and video feed simultaneously to identify product damage (Wrong Item / Broken) and sentiment.
+                </p>
             </div>
+
+            <!-- Step 2 -->
+            <div class="card" style="border:var(--border); box-shadow:var(--shadow); padding:30px; text-align:left; background:var(--pink); display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="background:var(--black); color:var(--white); font-family:var(--font-mono); font-weight:700; font-size:12px; display:inline-block; padding:6px 10px; margin-bottom:20px; border:2px solid var(--black);">PROCESS</div>
+                <h3 style="font-family:var(--font-display); font-size:40px; margin-bottom:16px; line-height:0.9;">RISK SCORING</h3>
+                <p style="font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--black);">
+                    Kineo pulls order history from <strong>Firestore</strong>. It computes a churn risk score based on frustration level, LTV (Lifetime Value), and return frequency.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card" style="border:var(--border); box-shadow:var(--shadow); padding:30px; text-align:left; background:var(--green); display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="background:var(--black); color:var(--white); font-family:var(--font-mono); font-weight:700; font-size:12px; display:inline-block; padding:6px 10px; margin-bottom:20px; border:2px solid var(--black);">ACTION</div>
+                <h3 style="font-family:var(--font-display); font-size:40px; margin-bottom:16px; line-height:0.9;">THE WIN-BACK</h3>
+                <p style="font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--black);">
+                    Before the app closes, Kineo speaks a personalized offer: Free Replacement, Store Credit, or Discount. Fully automated on <strong>Cloud Run</strong>.
+                </p>
+            </div>
+
         </div>
     </section>
 
@@ -424,7 +480,7 @@
 
             <div class="input-group">
                 <label>Agent Name</label>
-                <input type="text" id="agent-name" placeholder="Jarvis" value="Jarvis" />
+                <input type="text" id="agent-name" placeholder="Kineo" value="Kineo" />
             </div>
 
             <div style="display:flex; gap:16px; margin-bottom:20px;">
@@ -467,7 +523,7 @@
     }
 
     startBtn.addEventListener('click', async () => {
-        const agentName = agentNameInput.value || "Jarvis";
+        const agentName = agentNameInput.value || "Kineo";
         log(`Initializing connection to agent: ${agentName}...`);
 
         try {
