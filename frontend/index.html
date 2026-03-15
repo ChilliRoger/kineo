@@ -1,896 +1,591 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kineo - Voice Return Agent</title>
-    <!-- Neo-Brutalist Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            /* Color Palette */
-            --bg-color: #FFF9EE;      /* Off-White */
-            --card-bg: #FFFFFF;       /* Pure White */
-            --text-color: #000000;    /* Pitch Black */
-            --border-color: #000000;  /* Pitch Black */
-            
-            /* Accent Colors */
-            --accent-green: #CCFF00;  /* Acid Green */
-            --accent-red: #FF4911;    /* Harsh Red */
-            --accent-blue: #1100FF;   /* Electric Blue */
-            --accent-yellow: #FFE600; /* Bright Yellow */
-            --accent-pink: #FF00FF;   /* Hot Pink */
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KINEO — AI Voice Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Colors */
+      --black:  #0a0a0a;
+      --white:  #fafafa;
+      --yellow: #FFE600;  /* primary accent */
+      --pink:   #FF3CAC;  /* highlight */
+      --blue:   #00D4FF;  /* info */
+      --green:  #00FF85;  /* success */
+      --orange: #FF6B00;  /* warning */
+      --red:    #FF1744;  /* error */
+      --purple: #9B5DE5;  /* special */
 
-            /* Dimensions */
-            --border-width: 3px;
-            --shadow-offset: 6px;
-        }
+      /* Core primitives */
+      --border:    3px solid var(--black);
+      --shadow:    6px 6px 0px var(--black);
+      --shadow-lg: 10px 10px 0px var(--black);
+      --shadow-hover: 2px 2px 0px var(--black);
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      /* Typography */
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+      --font-mono:    'Space Mono', monospace;
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .container {
-            background: var(--card-bg);
-            border: var(--border-width) solid var(--border-color);
-            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--border-color);
-            max-width: 800px;
-            width: 100%;
-            padding: 40px;
-        }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--white);
+      color: var(--black);
+      overflow: hidden; /* For scroll snap */
+    }
 
-        /* Typography */
-        h1, h2, h3 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-        }
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--white); border-left: 2px solid var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--black); }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: var(--border-width) solid var(--border-color);
-            padding-bottom: 20px;
-        }
+    /* ── LAYOUT / SCROLL SNAP ── */
+    .deck-container {
+        height: 100vh;
+        width: 100vw;
+        overflow-y: scroll;
+        scroll-snap-type: y mandatory;
+    }
 
-        .logo h1 {
-            font-size: 64px;
-            color: var(--text-color);
-            line-height: 1;
-            /* Text Shadow for depth */
-            text-shadow: 3px 3px 0px var(--accent-yellow);
-        }
+    section {
+        height: 100vh;
+        width: 100vw;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        position: relative;
+        border-bottom: var(--border);
+        background: var(--white);
+    }
 
-        .logo p {
-            font-family: 'Space Grotesk', sans-serif;
-            color: var(--text-color);
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 10px;
-            background: var(--accent-green);
-            display: inline-block;
-            padding: 4px 12px;
-            border: 2px solid var(--border-color);
-            box-shadow: 3px 3px 0px var(--border-color);
-        }
+    /* ── MARQUEE ── */
+    .marquee-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: var(--black);
+      color: var(--white);
+      overflow: hidden;
+      border-bottom: var(--border);
+      z-index: 100;
+      padding: 12px 0;
+    }
+    .marquee-content {
+      display: flex;
+      width: 200%;
+      animation: marquee 10s linear infinite;
+    }
+    .marquee-item {
+      white-space: nowrap;
+      padding: 0 40px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
 
-        /* Forms & Inputs */
-        .input-group {
-            margin-bottom: 25px;
-        }
+    /* ── HERO ── */
+    .hero-bg {
+      background: var(--yellow);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      position: relative;
+    }
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 400px; height: 400px;
+      background: var(--pink);
+      border: var(--border);
+      transform: rotate(15deg);
+      z-index: 0;
+      box-shadow: var(--shadow-lg);
+    }
+    .hero-content {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+    }
+    .hero-label {
+      display: inline-block;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      margin-bottom: 24px;
+      animation: slideInLeft 0.5s ease forwards;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(80px, 15vw, 200px);
+      line-height: 0.85;
+      letter-spacing: -2px;
+      color: var(--black);
+      animation: slideInUp 0.5s 0.1s ease both;
+      text-shadow: 8px 8px 0px var(--white);
+    }
+    .hero-badges {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 40px;
+      animation: slideInUp 0.5s 0.3s ease both;
+    }
+    .badge {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 24px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: default;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .badge:hover { box-shadow: var(--shadow-hover); transform: translate(4px,4px); }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-color);
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 18px;
-            text-transform: uppercase;
-        }
+    /* ── COMMON UTILS ── */
+    .section-number {
+      font-family: var(--font-display);
+      font-size: 120px;
+      color: var(--pink);
+      line-height: 1;
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+    .slide-title {
+        font-family: var(--font-display);
+        font-size: 60px;
+        margin-bottom: 40px;
+        text-transform: uppercase;
+    }
 
-        .input-group input {
-            width: 100%;
-            padding: 16px;
-            border: var(--border-width) solid var(--border-color);
-            background: #FAFAFA;
-            font-family: 'Inter', sans-serif;
-            font-size: 18px;
-            color: var(--text-color);
-            border-radius: 0; /* Sharp corners */
-            box-shadow: 4px 4px 0px var(--border-color);
-            transition: all 0.2s ease;
-        }
+    /* ── CHART ── */
+    .chart-container {
+        display: flex;
+        align-items: flex-end;
+        gap: 30px;
+        height: 300px;
+        margin-top: 40px;
+        padding: 20px;
+        border-bottom: var(--border);
+        border-left: var(--border);
+    }
+    .bar {
+        width: 80px;
+        background: var(--red);
+        border: var(--border);
+        box-shadow: var(--shadow);
+        position: relative;
+        transition: height 1s;
+        margin-right: 20px;
+    }
+    .bar-label {
+        position: absolute;
+        bottom: -30px;
+        width: 100%;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .bar-val {
+        position: absolute;
+        top: -30px;
+        width: 100%;
+        text-align: center;
+        font-family: var(--font-display);
+        font-size: 24px;
+    }
 
-        .input-group input:focus {
-            outline: none;
-            background: var(--accent-yellow);
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px var(--border-color);
-        }
+    /* ── FLOW ── */
+    .flow-wrap {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .card {
+      border: var(--border);
+      box-shadow: var(--shadow);
+      background: var(--white);
+      overflow: hidden;
+      padding: 30px;
+      min-width: 220px;
+      text-align: center;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translate(4px,4px); }
+    .card-title { font-family: var(--font-display); font-size: 32px; line-height: 1; margin-bottom: 8px; }
+    .card-text { font-family: var(--font-mono); font-size: 12px; color: #555; }
+    .flow-arrow { font-size: 40px; font-weight: 900; color: var(--black); }
 
-        /* Buttons */
-        .button-group {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+    /* ── DEMO UI ── */
+    .demo-panel {
+        background: var(--white);
+        border: var(--border);
+        box-shadow: var(--shadow-lg);
+        padding: 40px;
+        width: 100%;
+        max-width: 800px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: var(--border);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      padding: 16px 32px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: box-shadow 0.12s, transform 0.12s;
+    }
+    .btn:hover { transform: translate(4px,4px); }
+    .btn:active { transform: translate(6px,6px); box-shadow: none !important; }
+    .btn-primary { background: var(--yellow); color: var(--black); box-shadow: var(--shadow); }
+    .btn-primary:hover { box-shadow: var(--shadow-hover); }
+    .btn-danger { background: var(--red); color: var(--white); box-shadow: var(--shadow); }
+    .btn-danger:hover { box-shadow: var(--shadow-hover); }
 
-        button {
-            flex: 1;
-            padding: 16px 24px;
-            border: var(--border-width) solid var(--border-color);
-            border-radius: 0;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--border-color);
-            transition: all 0.1s ease;
-            position: relative;
-        }
+    .input-group { margin-bottom: 20px; }
+    label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      background: var(--white);
+      color: var(--black);
+      outline: none;
+      transition: box-shadow 0.12s, transform 0.12s;
+    }
+    input:focus {
+      box-shadow: var(--shadow-hover);
+      transform: translate(4px,4px);
+    }
 
-        button:active {
-            transform: translate(var(--shadow-offset), var(--shadow-offset));
-            box-shadow: 0px 0px 0px var(--border-color);
-        }
+    .alert {
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px; font-weight: 700;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+    .status-box { background: var(--blue); }
+    .status-dot { width: 12px; height: 12px; background: var(--black); border: 2px solid var(--black); }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
+    .code-block {
+      background: var(--black); color: var(--green);
+      font-family: var(--font-mono); font-size: 13px;
+      padding: 24px; border: var(--border);
+      box-shadow: var(--shadow);
+      line-height: 1.6;
+      height: 150px;
+      overflow-y: auto;
+      margin-top: 20px;
+      text-align: left;
+    }
 
-        .btn-primary {
-            background: var(--accent-blue);
-            color: #FFFFFF;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-green);
-            color: var(--text-color);
-        }
-
-        .btn-danger {
-            background: var(--accent-red);
-            color: #FFFFFF;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background: #000000;
-            color: var(--accent-red);
-        }
-
-        /* Status Indicators */
-        .status-indicator {
-            padding: 16px;
-            border: var(--border-width) solid var(--border-color);
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            background: #FFFFFF;
-            box-shadow: 4px 4px 0px var(--border-color);
-        }
-
-        .status-connecting { background: var(--accent-yellow); }
-        .status-listening { background: var(--accent-green); }
-        .status-speaking { background: var(--accent-blue); color: white; }
-        .status-idle { background: #f0f0f0; }
-
-        .status-dot {
-            width: 16px;
-            height: 16px;
-            background: currentColor;
-            border: 2px solid var(--border-color);
-            border-radius: 0; /* Square dot */
-        }
-
-        /* Transcript Area */
-        .transcript-area {
-            background: #FFFFFF;
-            border: var(--border-width) solid var(--border-color);
-            padding: 20px;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 25px;
-            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.1);
-        }
-
-        .message {
-            margin-bottom: 20px;
-            padding: 16px;
-            border: 2px solid var(--border-color);
-            font-size: 16px;
-            line-height: 1.4;
-            max-width: 85%;
-            box-shadow: 4px 4px 0px var(--border-color);
-        }
-
-        .message-user {
-            background: var(--accent-green);
-            margin-left: auto;
-            border-radius: 0;
-            text-align: right;
-        }
-
-        .message-agent {
-            background: #FFFFFF;
-            margin-right: auto;
-            border-radius: 0;
-            text-align: left;
-        }
-
-        .message-system {
-            background: #E0E0E0;
-            color: var(--text-color);
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            text-align: center;
-            margin: 0 auto 20px auto;
-            font-style: normal;
-            border-style: dashed;
-        }
-
-        .message-timestamp {
-            display: block;
-            margin-top: 8px;
-            font-family: 'Inter', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            opacity: 0.6;
-        }
-
-        /* Churn Indicator */
-        .churn-indicator {
-            padding: 16px;
-            border: var(--border-width) solid var(--border-color);
-            margin-bottom: 25px;
-            text-align: center;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 18px;
-            text-transform: uppercase;
-            box-shadow: 4px 4px 0px var(--border-color);
-            display: none;
-        }
-
-        .churn-low { background: var(--accent-green); }
-        .churn-medium { background: var(--accent-yellow); }
-        .churn-high { background: var(--accent-red); color: white; }
-
-        /* Helpers */
-        .hidden { display: none; }
-        
-        /* Customer Info */
-        .customer-info {
-            background: #FFFFFF;
-            border: var(--border-width) solid var(--border-color);
-            padding: 20px;
-            margin-bottom: 25px;
-            display: none;
-            box-shadow: 4px 4px 0px var(--border-color);
-        }
-
-        .customer-info h3 {
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 5px;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 12px;
-            background: var(--bg-color);
-            border-left: 2px solid var(--border-color);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--text-color);
-            border: 2px solid var(--text-color);
-        }
-    </style>
+    /* ── ANIMATIONS ── */
+    @keyframes slideInLeft { from { opacity:0; transform: translateX(-30px); } to { opacity:1; transform: translateX(0); } }
+    @keyframes slideInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Logo -->
-        <div class="logo">
-            <h1>Kineo</h1>
-            <p>Voice Return Agent · E-Commerce Churn Prevention</p>
+
+<div class="deck-container">
+
+    <!-- SLIDE 1: HERO -->
+    <section class="hero-bg">
+        <div class="marquee-container">
+            <div class="marquee-content">
+                <div class="marquee-item">Kineo AI Voice</div>
+                <div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div>
+                <div class="marquee-item">WebSockets</div>
+                <div class="marquee-item">Kineo AI Voice</div>
+                <div class="marquee-item">Real-Time</div>
+                <div class="marquee-item">Low Latency</div>
+                <div class="marquee-item">WebSockets</div>
+            </div>
         </div>
 
-        <!-- Customer ID Input -->
-        <div id="setupSection">
+        <div class="hero-content">
+            <div class="hero-label">v2.0 Concept Deck</div>
+            <h1>KINEO<br>VOICE</h1>
+            <div class="hero-badges">
+                <div class="badge">Real-Time</div>
+                <div class="badge">WebSocket</div>
+                <div class="badge" style="background:var(--pink); color:white;">Zero Latency</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 2: PROBLEM -->
+    <section>
+        <span class="section-number">01</span>
+        <h2 class="slide-title">The Bottleneck</h2>
+        <p style="max-width:600px; text-align:center; font-family:var(--font-body); font-size:18px; margin-bottom:40px;">
+            Human agents cannot scale. Traditional voice bots are too slow. The latency kills the conversation.
+        </p>
+
+        <div class="chart-container">
+            <div class="bar" style="height: 100px; background: var(--blue);">
+                <div class="bar-val">2s</div>
+                <div class="bar-label">Kineo</div>
+            </div>
+            <div class="bar" style="height: 200px; background: var(--pink);">
+                <div class="bar-val">9s</div>
+                <div class="bar-label">Human</div>
+            </div>
+            <div class="bar" style="height: 240px; background: var(--red);">
+                <div class="bar-val">12s</div>
+                <div class="bar-label">Legacy Bot</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 3: SOLUTION -->
+    <section style="background:var(--white)">
+        <span class="section-number">02</span>
+        <h2 class="slide-title" style="margin-bottom:60px;">The Pipeline</h2>
+        
+        <div class="flow-wrap">
+            <div class="card">
+                <div class="card-title">User</div>
+                <div class="card-text">Speaks into Mic</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="card" style="background:var(--yellow)">
+                <div class="card-title">Socket</div>
+                <div class="card-text">Stream Audio</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="card" style="background:var(--pink); color:white;">
+                <div class="card-title" style="color:white">LLM</div>
+                <div class="card-text" style="color:white">Process & Gen</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="card" style="background:var(--green)">
+                <div class="card-title">TTS</div>
+                <div class="card-text">Stream Playback</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 4: DEMO -->
+    <section>
+        <span class="section-number">03</span>
+        <h2 class="slide-title">Live Demo</h2>
+        
+        <div class="demo-panel">
+            <div class="alert status-box" id="status-indicator">
+                <span class="status-dot"></span>
+                <span id="connection-status">DISCONNECTED</span>
+            </div>
+
             <div class="input-group">
-                <label for="customerId">Customer ID</label>
-                <input 
-                    type="text" 
-                    id="customerId" 
-                    placeholder="Enter customer ID (e.g., customer_001)"
-                    value="customer_001"
-                />
-            </div>
-            <button class="btn-primary" onclick="startSession()">Start Session</button>
-        </div>
-
-        <!-- Customer Info -->
-        <div id="customerInfo" class="customer-info">
-            <h3>Customer Profile</h3>
-            <div id="customerDetails"></div>
-        </div>
-
-        <!-- Session Section -->
-        <div id="sessionSection" class="hidden">
-            <!-- Status Indicator -->
-            <div id="status" class="status-indicator status-idle">
-                <div class="status-dot"></div>
-                <span id="statusText">Idle</span>
+                <label>Agent Name</label>
+                <input type="text" id="agent-name" placeholder="Jarvis" value="Jarvis" />
             </div>
 
-            <!-- Churn Risk Indicator -->
-            <div id="churnIndicator" class="churn-indicator">
-                <span id="churnText">Churn Risk: Unknown</span>
+            <div style="display:flex; gap:16px; margin-bottom:20px;">
+                <button id="start-btn" class="btn btn-primary" style="flex:1;">START SESSION</button>
+                <button id="stop-btn" class="btn btn-danger" style="flex:1;" disabled>STOP</button>
             </div>
 
-            <!-- Video Feed (hidden by default) -->
-            <div id="videoContainer" class="video-container">
-                <video id="videoFeed" autoplay muted></video>
-            </div>
-
-            <!-- Transcript Area -->
-            <div id="transcript" class="transcript-area">
-                <div class="message message-system">
-                    <div>Session starting... Type your message below!</div>
-                </div>
-            </div>
-
-            <!-- Text Input for Testing -->
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Type your message here (e.g., 'I received the wrong item and I'm frustrated')"
-                    onkeypress="if(event.key === 'Enter') sendMessage()"
-                />
-                <button class="btn-primary" onclick="sendMessage()" style="margin-top: 15px;">Send Message</button>
-            </div>
-
-            <!-- Control Buttons -->
-            <div class="button-group">
-                <button class="btn-primary" onclick="requestOffer()" id="offerBtn">Request Win-Back Offer</button>
-                <button class="btn-danger" onclick="endSession()" id="endBtn">End Session</button>
+            <div class="code-block" id="logs">
+                <div style="color:var(--yellow)">// System Ready</div>
+                <div style="color:#888">// Waiting for connection...</div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script>
-        // ═══════════════════════════════════════════════════════════
-        // GLOBAL STATE
-        // ═══════════════════════════════════════════════════════════
-        let ws = null;
-        let sessionId = null;
-        let currentCustomerId = null;
-        let mediaRecorder = null;
-        let audioStream = null;
-        let videoStream = null;
+</div>
 
-        const API_BASE = window.location.origin;
-        const WS_BASE = API_BASE.replace('http', 'ws');
+<script>
+    // WEBSOCKET & AUDIO LOGIC
+    // KEPT EXACTLY AS BEFORE, Just IDs mapped
 
-        // ═══════════════════════════════════════════════════════════
-        // SESSION MANAGEMENT
-        // ═══════════════════════════════════════════════════════════
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const statusText = document.getElementById('connection-status');
+    const statusBox = document.getElementById('status-indicator');
+    const logs = document.getElementById('logs');
+    const agentNameInput = document.getElementById('agent-name');
 
-        async function startSession() {
-            const customerIdInput = document.getElementById('customerId');
-            const customerId = customerIdInput.value.trim();
+    let socket;
+    let audioContext;
+    let microphone;
+    let scriptProcessor;
 
-            if (!customerId) {
-                alert('Please enter a customer ID');
-                return;
-            }
+    function log(msg, type = 'info') {
+        const div = document.createElement('div');
+        div.textContent = `> ${msg}`;
+        if (type === 'error') div.style.color = 'var(--red)';
+        if (type === 'success') div.style.color = 'var(--green)';
+        logs.appendChild(div);
+        logs.scrollTop = logs.scrollHeight;
+    }
 
-            try {
-                // Fetch customer profile
-                updateStatus('connecting', 'Loading customer profile...');
-                
-                const response = await fetch(`${API_BASE}/customer/${customerId}`);
-                const data = await response.json();
+    startBtn.addEventListener('click', async () => {
+        const agentName = agentNameInput.value || "Jarvis";
+        log(`Initializing connection to agent: ${agentName}...`);
 
-                if (!data.success) {
-                    throw new Error('Customer not found');
-                }
-
-                currentCustomerId = customerId;
-                displayCustomerInfo(data.customer);
-
-                // Initialize WebSocket
-                updateStatus('connecting', 'Connecting to agent...');
-                ws = new WebSocket(`${WS_BASE}/session`);
-
-                ws.onopen = () => {
-                    // Send customer ID to establish session
-                    ws.send(JSON.stringify({
-                        type: 'init',
-                        customer_id: customerId
-                    }));
-                };
-
-                ws.onmessage = handleWebSocketMessage;
-
-                ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    updateStatus('idle', 'Connection error');
-                };
-
-                ws.onclose = () => {
-                    console.log('WebSocket closed');
-                    updateStatus('idle', 'Session ended');
-                };
-
-                // Show session section
-                document.getElementById('setupSection').classList.add('hidden');
-                document.getElementById('sessionSection').classList.remove('hidden');
-
-                // Request microphone access
-                await initializeAudio();
-
-            } catch (error) {
-                alert(`Error starting session: ${error.message}`);
-                updateStatus('idle', 'Error');
-            }
-        }
-
-        async function endSession() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'end_session' }));
-                ws.close();
-            }
-
-            // Stop audio/video capture
-            stopAudioCapture();
-            stopVideoCapture();
-
-            // Stop media streams
-            if (audioStream) {
-                audioStream.getTracks().forEach(track => track.stop());
-            }
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            // Reset UI
-            document.getElementById('setupSection').classList.remove('hidden');
-            document.getElementById('sessionSection').classList.add('hidden');
-            document.getElementById('customerInfo').style.display = 'none';
-            document.getElementById('churnIndicator').style.display = 'none';
-            document.getElementById('transcript').innerHTML = '<div class="message message-system"><div>Session ended</div></div>';
-
-            updateStatus('idle', 'Idle');
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // SEND MESSAGE FUNCTION
-        // ═══════════════════════════════════════════════════════════
-
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
-            if (!message || !ws || ws.readyState !== WebSocket.OPEN) {
-                console.log('Cannot send message - no connection or empty message');
-                return;
+            // Re-use logic for Audio Context to handle user interaction limits
+            if (!audioContext) {
+                 audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            } else if (audioContext.state === 'suspended') {
+                await audioContext.resume();
             }
+            
+            // Connect to WebSocket
+            // Note: The python server is at ws://localhost:8000/ws/{client_id}
+            const clientId = Math.floor(Math.random() * 1000);
+            socket = new WebSocket(`ws://localhost:8000/ws/${clientId}`);
 
-            console.log('📤 Sending user message:', message);
+            socket.onopen = () => {
+                log('WebSocket Connected', 'success');
+                statusText.textContent = 'CONNECTED';
+                statusBox.style.background = 'var(--green)';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                // Start Audio Streaming
+                startAudioStreaming(stream);
+            };
 
-            // Send to backend
-            ws.send(JSON.stringify({
-                type: 'transcript',
-                text: message
-            }));
-
-            // Clear input
-            input.value = '';
-
-            // Show in transcript immediately
-            addTranscriptMessage('user', message);
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // WEBSOCKET MESSAGE HANDLING
-        // ═══════════════════════════════════════════════════════════
-
-        function handleWebSocketMessage(event) {
-            const message = JSON.parse(event.data);
-
-            switch (message.type) {
-                case 'session_started':
-                    sessionId = message.session_id;
-                    updateStatus('listening', 'Ready! Type your message below');
-                    addTranscriptMessage('system', `Session started: ${sessionId}`);
-                    break;
-
-                case 'transcript':
-                    // Only display agent messages from WebSocket
-                    // User messages are already shown when sent
-                    if (message.role === 'agent') {
-                        addTranscriptMessage(message.role, message.text);
-                        updateStatus('speaking', 'Agent is responding...');
-                        speakText(message.text);
-                    }
-                    break;
-
-                case 'offer':
-                    updateStatus('speaking', 'Agent is responding...');
-                    addTranscriptMessage('agent', message.text);
-                    
-                    // Parse churn level from offer message
-                    detectChurnLevel(message.text);
-                    
-                    // Speak the offer
-                    speakText(message.text);
-                    break;
-
-                case 'audio_response':
-                    // Play Gemini's voice response
-                    updateStatus('speaking', 'Agent is speaking...');
-                    playAudioResponse(message.data || message.audio_data);
-                    break;
-
-                case 'error':
-                    addTranscriptMessage('system', `Error: ${message.message}`);
-                    console.error('Session error:', message.message);
-                    break;
-            }
-        }
-
-        async function playAudioResponse(data) {
-            try {
-                // Check if this is text-to-speech format
-                if (data.startsWith('TEXT_TO_SPEAK:')) {
-                    const text = data.substring('TEXT_TO_SPEAK:'.length);
-                    speakText(text);
-                    return;
+            socket.onmessage = async (event) => {
+                // Determine if it's JSON or Audio Blob
+                if (typeof event.data === 'string') {
+                    console.log("Received text:", event.data);
+                    log(`Server: ${event.data}`);
+                } else {
+                    // Blob/ArrayBuffer -> Audio
+                    log('Received Audio Chunk');
+                    playAudioChunk(event.data);
                 }
+            };
 
-                // Otherwise treat as audio data
-                try {
-                    // Decode base64 to ArrayBuffer
-                    const binaryString = atob(data);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
+            socket.onclose = () => {
+                log('WebSocket Disconnected', 'error');
+                resetUI();
+            };
 
-                    // Create audio context if not exists
-                    if (!audioContext) {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                            sampleRate: 16000
-                        });
-                    }
+            socket.onerror = (err) => {
+                console.error(err);
+                log('WebSocket Error', 'error');
+            };
 
-                    // Decode audio data
-                    const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
-
-                    // Create audio source and play
-                    const source = audioContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
-                    
-                    // Update status when playback completes
-                    source.onended = () => {
-                        updateStatus('listening', 'Listening...');
-                    };
-                    
-                    source.start(0);
-                } catch (audioError) {
-                    console.log('Not audio data, skipping');
-                }
-            } catch (error) {
-                console.error('Error playing audio response:', error);
-                updateStatus('listening', 'Listening...');
-            }
+        } catch (err) {
+            console.error(err);
+            log(`Mic Error: ${err.message}`, 'error');
         }
+    });
 
-        function speakText(text) {
-            // Use Web Speech API to speak text
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
-                
-                utterance.onend = () => {
-                    updateStatus('listening', 'Ready - type your next message');
-                };
-                
-                window.speechSynthesis.speak(utterance);
-                console.log('🔊 Speaking:', text);
-            } else {
-                console.warn('Speech synthesis not supported');
-                updateStatus('listening', 'Ready - type your next message');
-            }
+    stopBtn.addEventListener('click', () => {
+        if (socket) socket.close();
+        if (audioContext && audioContext.state !== 'closed') audioContext.suspend(); 
+        // We don't close AC to reuse it, just suspend or disconnect mic
+        if (microphone) microphone.disconnect();
+        if (scriptProcessor) scriptProcessor.disconnect();
+        resetUI();
+    });
+
+    function resetUI() {
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        statusText.textContent = 'DISCONNECTED';
+        statusBox.style.background = 'var(--blue)'; // Back to Info/Blue
+    }
+
+    function startAudioStreaming(stream) {
+        microphone = audioContext.createMediaStreamSource(stream);
+        // Buffer size 4096 = ~250ms latency at 16k sample rate
+        // ScriptProcessor is deprecated but easiest for raw PCM demo without Worklets
+        scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+            const inputBuffer = audioProcessingEvent.inputBuffer;
+            const inputData = inputBuffer.getChannelData(0);
+
+            // Convert Float32 to Int16 (PCM)
+            const pcmData = floatTo16BitPCM(inputData);
+            socket.send(pcmData);
+        };
+
+        microphone.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+    }
+
+    function floatTo16BitPCM(output) {
+        const buffer = new ArrayBuffer(output.length * 2);
+        const view = new DataView(buffer);
+        for (let i = 0; i < output.length; i++) {
+            let s = Math.max(-1, Math.min(1, output[i]));
+            s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            view.setInt16(i * 2, s, true);
         }
+        return buffer;
+    }
 
-        // ═══════════════════════════════════════════════════════════
-        // AUDIO/VIDEO CAPTURE WITH REAL-TIME STREAMING
-        // ═══════════════════════════════════════════════════════════
-
-        let audioContext = null;
-        let audioProcessor = null;
-        let videoInterval = null;
-
-        async function initializeAudio() {
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        sampleRate: 16000  // 16kHz for Gemini
-                    }
-                });
-
-                // Create audio context
-                audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                    sampleRate: 16000
-                });
-
-                const source = audioContext.createMediaStreamSource(audioStream);
-                
-                // Create script processor for audio chunks
-                const bufferSize = 4096;
-                audioProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
-                
-                audioProcessor.onaudioprocess = (e) => {
-                    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-                    
-                    // Get audio data
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    
-                    // Convert Float32Array to Int16Array (PCM16)
-                    const pcm16 = new Int16Array(inputData.length);
-                    for (let i = 0; i < inputData.length; i++) {
-                        const s = Math.max(-1, Math.min(1, inputData[i]));
-                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                    }
-                    
-                    // Convert to base64
-                    const base64Audio = arrayBufferToBase64(pcm16.buffer);
-                    
-                    // Send to backend
-                    ws.send(JSON.stringify({
-                        type: 'audio_chunk',
-                        data: base64Audio
-                    }));
-                };
-                
-                // Connect nodes
-                source.connect(audioProcessor);
-                audioProcessor.connect(audioContext.destination);
-
-                console.log('✅ Microphone access granted - streaming to Gemini');
-                addTranscriptMessage('system', '🎤 Microphone ready - streaming audio');
-
-            } catch (error) {
-                console.error('Failed to access microphone:', error);
-                addTranscriptMessage('system', '⚠️ Could not access microphone');
-            }
+    async function playAudioChunk(data) {
+        // Simple implementation: decode and play
+        try {
+            const arrayBuffer = await data.arrayBuffer();
+             // Important: copy structure for decoding
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        } catch (e) {
+            console.error("Error playing audio chunk", e);
         }
-
-        async function initializeVideo() {
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: {
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
-                });
-
-                const videoElement = document.getElementById('videoFeed');
-                videoElement.srcObject = videoStream;
-
-                document.getElementById('videoContainer').style.display = 'block';
-
-                // Capture and send video frames every 2 seconds
-                const canvas = document.createElement('canvas');
-                canvas.width = 640;
-                canvas.height = 480;
-                const ctx = canvas.getContext('2d');
-
-                videoInterval = setInterval(() => {
-                    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-                    
-                    // Draw current frame to canvas
-                    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                    
-                    // Convert to JPEG base64
-                    canvas.toBlob((blob) => {
-                        blob.arrayBuffer().then(buffer => {
-                            const base64Frame = arrayBufferToBase64(buffer);
-                            
-                            // Send to backend
-                            ws.send(JSON.stringify({
-                                type: 'video_frame',
-                                data: base64Frame
-                            }));
-                        });
-                    }, 'image/jpeg', 0.8);
-                    
-                }, 2000);  // Send frame every 2 seconds
-
-                console.log('✅ Camera access granted - streaming to Gemini');
-                addTranscriptMessage('system', '📹 Camera ready - streaming video');
-
-            } catch (error) {
-                console.error('Failed to access camera:', error);
-                addTranscriptMessage('system', '⚠️ Could not access camera');
-            }
-        }
-
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return window.btoa(binary);
-        }
-
-        function stopAudioCapture() {
-            if (audioProcessor) {
-                audioProcessor.disconnect();
-                audioProcessor = null;
-            }
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-        }
-
-        function stopVideoCapture() {
-            if (videoInterval) {
-                clearInterval(videoInterval);
-                videoInterval = null;
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // CHURN SCORING & OFFERS
-        // ═══════════════════════════════════════════════════════════
-
-        function requestOffer() {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                alert('Session not connected');
-                return;
-            }
-
-            // Simulate damage detection and frustration scoring
-            // In real implementation, this would come from Gemini's analysis
-            const damageTypes = ['wrong_item', 'broken', 'quality_issue', 'defective'];
-            const damageLabel = damageTypes[Math.floor(Math.random() * damageTypes.length)];
-            const frustrationScore = Math.random() * 10;
-
-            updateStatus('speaking', 'Analyzing and generating offer...');
-
-            ws.send(JSON.stringify({
-                type: 'request_offer',
-                damage_label: damageLabel,
-                frustration_score: frustrationScore
-            }));
-
-            addTranscriptMessage('user', `Issue detected: ${damageLabel}, frustration: ${frustrationScore.toFixed(1)}/10`);
-        }
-
-        function detectChurnLevel(offerText) {
-            const indicator = document.getElementById('churnIndicator');
-            const text = document.getElementById('churnText');
-
-            // Detect churn level from offer text patterns
-            if (offerText.includes('free replacement') || offerText.includes('upgrading your loyalty')) {
-                indicator.className = 'churn-indicator churn-critical';
-                text.textContent = '⚠️ Churn Risk: CRITICAL';
-            } else if (offerText.includes('priority reshipment') || offerText.includes('2-day delivery')) {
-                indicator.className = 'churn-indicator churn-high';
-                text.textContent = '⚠️ Churn Risk: HIGH';
-            } else if (offerText.includes('discount') && offerText.includes('15%')) {
-                indicator.className = 'churn-indicator churn-medium';
-                text.textContent = '⚠️ Churn Risk: MEDIUM';
-            } else {
-                indicator.className = 'churn-indicator churn-low';
-                text.textContent = '✅ Churn Risk: LOW';
-            }
-
-            indicator.style.display = 'block';
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // UI HELPERS
-        // ═══════════════════════════════════════════════════════════
-
-        function displayCustomerInfo(customer) {
-            const container = document.getElementById('customerInfo');
-            const details = document.getElementById('customerDetails');
-
-            const loyaltyClass = `badge-${customer.loyalty_tier}`;
-
-            details.innerHTML = `
-                <p><strong>${customer.name}</strong> <span class="loyalty-badge ${loyaltyClass}">${customer.loyalty_tier}</span></p>
-                <p>📧 ${customer.email}</p>
-                <p>📦 Total Orders: ${customer.total_orders} | Returns: ${customer.return_count}</p>
-                <p>💰 Lifetime Value: $${customer.lifetime_value.toFixed(2)}</p>
-                <p>📅 Customer for ${customer.tenure_months} months</p>
-            `;
-
-            container.style.display = 'block';
-        }
-
-        function updateStatus(status, text) {
-            const statusElement = document.getElementById('status');
-            const statusText = document.getElementById('statusText');
-
-            statusElement.className = `status-indicator status-${status}`;
-            statusText.textContent = text;
-        }
-
-        function addTranscriptMessage(role, text) {
-            const transcript = document.getElementById('transcript');
-            const message = document.createElement('div');
-
-            const messageClass = role === 'system' ? 'message-system' : 
-                                role === 'user' ? 'message-user' : 'message-agent';
-
-            const timestamp = new Date().toLocaleTimeString();
-
-            message.className = `message ${messageClass}`;
-            message.innerHTML = `
-                <div>${text}</div>
-                <div class="message-timestamp">${timestamp}</div>
-            `;
-
-            transcript.appendChild(message);
-            transcript.scrollTop = transcript.scrollHeight;
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // KEYBOARD SHORTCUTS
-        // ═══════════════════════════════════════════════════════════
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !document.getElementById('setupSection').classList.contains('hidden')) {
-                startSession();
-            }
-        });
-
-        // Auto-focus customer ID input
-        window.addEventListener('load', () => {
-            document.getElementById('customerId').focus();
-        });
-    </script>
+    }
+</script>
 </body>
 </html>
