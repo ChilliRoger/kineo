@@ -753,8 +753,13 @@
                 await audioContext.resume();
             }
             
+            // Determine WebSocket URL dynamically
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const wsUrl = `${protocol}//${host}/session`;
+
             // Connect to WebSocket /session
-            socket = new WebSocket(`ws://localhost:8000/session`);
+            socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
                 log('WebSocket Connected', 'success');
