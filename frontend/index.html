@@ -620,6 +620,14 @@
 </div>
 
 <script>
+    // =========================================================================
+    // CONFIGURATION (DEPLOYMENT)
+    // =========================================================================
+    // Set this URL when deploying frontend and backend separately.
+    // Example: "wss://kineo-backend.onrender.com/session"
+    // Leave null for local development (defaults to current host).
+    const CONFIG_BACKEND_URL = null; 
+
     // WEBSOCKET & AUDIO LOGIC
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
@@ -753,10 +761,16 @@
                 await audioContext.resume();
             }
             
-            // Determine WebSocket URL dynamically
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.host;
-            const wsUrl = `${protocol}//${host}/session`;
+            // Determine WebSocket URL dynamically or use configured backend
+            let wsUrl;
+            // Use global configuration if available (RECOMMENDED FOR PRODUCTION)
+            if (typeof CONFIG_BACKEND_URL !== 'undefined' && CONFIG_BACKEND_URL) {
+                wsUrl = CONFIG_BACKEND_URL;
+            } else {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = window.location.host;
+                wsUrl = `${protocol}//${host}/session`;
+            }
 
             // Connect to WebSocket /session
             socket = new WebSocket(wsUrl);
