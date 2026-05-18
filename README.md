@@ -111,7 +111,7 @@ Kineo follows a high-performance modular architecture:
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐
 │  Session Manager│  │  Churn Engine   │  │   Order Service     │
 │                 │  │                 │  │                     │
-│ • State Mgmt    │  │ • Risk Scoring  │  │ • Mock OMS          │
+│ • State Mgmt    │  │ • Risk Scoring  │  │ •  OMS              │
 │ • Context       │  │ • Offer Logic   │  │ • Status Updates    │
 └─────────────────┘  └─────────────────┘  └─────────────────────┘
          │                    │                       │
