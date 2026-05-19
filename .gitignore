@@ -219,3 +219,4 @@ reports/
 
 # Deployment artifacts
 deployment-logs/
+.vercel
